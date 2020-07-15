@@ -1,0 +1,603 @@
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+
+>- pyplot submodule of matplotlib.
+>- plot function of pyplot
+>- pass a list of values to the plot function. Plot takes these as Y values. The indices of the list are automatically taken as the X values. The command %matplotlib inline makes only sense, if you work with Ipython Notebook.
+>- format "og" : The order of the two characters could have been reversed, and "b-" is used as the default value, i.e. a solid blue line - is the default value of the format parameter.
+>- 
+>- 
+>- 
+>- 
+>- 
+>- 
+
+
+import matplotlib.pyplot as plt
+plt.plot([-1, -4.5, 16, 23], "ob")
+plt.show()
+
+
+import matplotlib.pyplot as plt
+# Data for plotting
+X = [2, 4, 6, 8, 10]
+Y = [1, 4, 9, 19, 39]
+
+fig, ax = plt.subplots()
+ax.plot(X, Y)
+
+
+
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+Practice Exercise for Box Plots and HIstogram:
+***********************************************
+
+est_hist_of_a_sample_normal_distribution
+
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+
+Create an axis, associated with figure fig, using add_subplot. Name it as ax.
+
+Set random seed to 100 using the expression np.random.seed(100).
+
+Create a normal distribution x1 of 1000 values, with mean 25 and standard deviation 3.0. Use np.random.randn.
+
+Draw a histogram of x1 with 30 bins. Use the hist function.
+
+Label X-Axis as X1
+
+Label Y-Axis as Bin Count
+
+Set Title as Histogram of a Single Dataset
+
+from matplotlib import pyplot as plt
+import numpy as np
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+ax.set(xlabel='X1', ylabel='Bin Count', title='Histogram of a Single Dataset', )
+
+np.random.seed(100)
+x1 = 25 + 3.0*np.random.randn(1000)
+
+ax.hist(x1, bins=30)
+plt.show()
+
+._._._._._._._._._._._._._._._._._._._.
+
+test_boxplot_of_four_normal_distribution
+
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+Create an axis, associated with figure fig, using add_subplot. Name it as ax.
+Set random seed to 100 using the expression np.random.seed(100).
+Create a normal distribution x1 of 1000 values, with mean 25 and standard deviation 3.0. Use np.random.randn.
+Create a normal distribution x2 of 1000 values, with mean 35 and standard deviation 5.0. Use np.random.randn.
+Create a normal distribution x3 of 1000 values, with mean 55 and standard deviation 10.0. Use np.random.randn.
+Create a normal distribution x4 of 1000 values, with mean 45 and standard deviation 3.0. Use np.random.randn.
+Create a list labels with elements ['X1', 'X2', 'X3', 'X4].
+Draw a Boxplot x1, x2, x3, x4 with notches and label it using the labels list. Use the boxplot function.
+Choose + symbol for outlier, and fill color inside boxes by setting patch_artist argument to True.
+Label X-Axis as Dataset
+Label Y-Axis as Value
+
+Set Title as Box plot of Multiple Datasets
+
+from matplotlib import pyplot as plt
+import numpy as np
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+ax.set(xlabel='Dataset', ylabel='Value', title='Box plot of Multiple Datasets')
+
+np.random.seed(100)
+x1 = 25 + 3.0*np.random.randn(1000)
+x2 = 35 + 5.0*np.random.randn(1000)
+x3 = 45 + 10.0*np.random.randn(1000)
+x4 = 55 + 3.0*np.random.randn(1000)
+labels1 = ['X1', 'X2', 'X3', 'X4']
+
+ax.boxplot([x1, x2, x3, x4], labels=labels1,patch_artist=True)
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+# Necessary import before any such plots
+from matplotlib import pyplot as plt
+import numpy as np
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+ax.set(title='Avg. Quarterly Sales', xlabel='Quarter', ylabel='Sales (in millions)')
+
+# Data for the plots e.g. X vs Y
+quarters = [1, 2, 3]
+sales_2017 = [25782, 35783, 36133]
+
+# Actual code which will create the graph object
+ax.bar(quarters, sales_2017)
+
+# Set the tickers or markers on X-axis or Y-Axis
+ax.set_xticks(quarters)
+ax.set_xticklabels(['Q1-2017', 'Q2-2017', 'Q3-2017'])
+
+# Which plots the graph
+plt.show()
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+Practice Exercise:
+*******************
+Ex 1:
+*****
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+Create an axis, associated with figure fig, using add_subplot. Name it as ax.
+Define a list species, with elements ['setosa', 'versicolor', 'viriginica'].
+Define a list index, with values [0.2, 1.2, 2.2].
+Define another list sepal_len with values  [5.01, 5.94, 6.59]. These values represent the mean sepal length of iris flowers belonging to three species.
+
+Draw a bar plot using the bar function, such that the height of each vertical bar displays the sepal length of a species.
+Use index and sepal_len as variables. Set bar width as 0.5, color as red, and border color of the bar as black.
+
+Label X-Axis as Species.
+Label Y-Axis as Sepal Length (cm).
+Set Title as Mean Sepal Length of Iris Species.
+
+Limit X-Axis from 0 to 3.
+Limit Y-Axis from 0 to 7.
+
+Set ticks on X-Axis at 0.45, 1.45, and 2.45.
+Set X-Axis tick labels to ['setosa', 'versicolor', 'viriginica']
+
+from matplotlib import pyplot
+import numpy as np
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+ax.set(title='Mean Sepal Length of Iris Species', xlabel='Species', ylabel='Sepal Length (cm)', xlim=(0,3), ylim = (0,7))
+
+# Data for the plots e.g. X vs Y
+species = ['setosa', 'versicolor', 'viriginica']
+index = [0.2, 1.2, 2.2]
+sepal_len = [5.01, 5.94, 6.59]
+
+# Actual code which will create the graph object
+ax.bar(index, sepal_len, width=0.5, color=['red'], edgecolor=['black'])
+
+# Set the tickers or markers on X-axis or Y-Axis
+ax.set_xticks([0.45, 1.45, 2.45])
+ax.set_xticklabels(species)
+
+# Which plots the graph
+plt.show()
+
+**********************************************************************************************************************************
+Ex 2:
+*****
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+Create an axis, associated with figure fig, using add_subplot. Name it as ax.
+Define the following lists:
+sepal_len = [5.01, 5.94, 6.59]
+sepal_wd = [3.42, 2.77, 2.97]
+petal_len = [1.46, 4.26, 5.55]
+petal_wd = [0.24, 1.33, 2.03]
+species = ['setosa', 'versicolor', 'viriginica']
+species_index1 = [0.7, 1.7, 2.7]
+species_index2 = [0.9, 1.9, 2.9]
+species_index3 = [1.1, 2.1, 3.1]
+species_index4 = [1.3, 2.3, 3.3]
+
+Draw vertical bars showing the mean sepal length of a species. Set the color of the bars to c, boundary line color to black, width of bars as 0.2, and label it as Sepal Length. Use bar with species_index1 and sepal_len.
+
+Draw vertical bars showing mean sepal length of a species. Set the color of the bars to m, boundary line color to black, width of bars as 0.2, and label it as Sepal Width. Use bar with species_index2 and sepal_wd.
+
+Draw vertical bars showing mean sepal length of a species. Set the color of the bars to y, boundary line color to black, width of bars as 0.2, and label it as Petal Length. Use bar with species_index3 and petal_len.
+
+Draw vertical bars showing mean sepal length of a species. Set the color of the bars to orange, boundary line color to black, width of bars as 0.2, and label it as Petal Width. Use bar with species_index4 and petal_wd.
+
+Label X-Axis as Species.
+Label Y-Axis as Iris Measurements (cm).
+Set Title as Mean Measurements of Iris Species.
+
+Limit X-Axis from 0.5 to 3.7 .
+Limit Y-Axis from 0 to 10.
+
+Mark major ticks on X-Axis at 1.1, 2.1, and 3.1.
+Label the major ticks on X-Axis as setosa,  versicolor and viriginica respectively.
+
+Add a legend.
+
+from matplotlib import pyplot
+import numpy as np
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+ax.set(title='Mean Measurements of Iris Species', xlabel='Species', ylabel='Iris Measurements (cm)', xlim=(0.5,3.7), ylim = (0,10))
+
+# Data for the plots e.g. X vs Y
+sepal_len = [5.01, 5.94, 6.59]
+sepal_wd = [3.42, 2.77, 2.97]
+petal_len = [1.46, 4.26, 5.55]
+petal_wd = [0.24, 1.33, 2.03]
+species = ['setosa', 'versicolor', 'viriginica']
+species_index1 = [0.7, 1.7, 2.7]
+species_index2 = [0.9, 1.9, 2.9]
+species_index3 = [1.1, 2.1, 3.1]
+species_index4 = [1.3, 2.3, 3.3]
+
+# Actual code which will create the graph object
+ax.bar(species_index1, sepal_len, width=0.2, color=['c'], edgecolor=['black'], label='Sepal Length')
+ax.bar(species_index2, sepal_wd, width=0.2, color=['m'], edgecolor=['black'], label='Sepal Width')
+ax.bar(species_index3, petal_len, width=0.2, color=['y'], edgecolor=['black'], label='Petal Length')
+ax.bar(species_index4, petal_wd, width=0.2, color=['orange'], edgecolor=['black'], label='Petal Width')
+
+# Set the tickers or markers on X-axis or Y-Axis
+ax.set_xticks([1.1, 2.1, 3.1])
+ax.set_xticklabels(species)
+
+# Which plots the graph
+plt.legend()
+plt.show()
+
+**********************************************************************************************************************************
+Ex 3:
+*****
+Create a figure of size 12 inches in width, and 5 inches in height. Name it as fig.
+Create an axis, associated with figure fig, using add_subplot. Name it as ax.
+Define a list species, with elements ['setosa', 'versicolor', 'viriginica'].
+Define a list index, with values [0.2, 1.2, 2.2].
+Define another list petal_len with values  [1.46, 4.26, 5.55]. These values represent the mean petal length of iris flowers belonging to three species.
+
+Draw a horizontal bar plot using bar function, such that the width of each bar display the petal length of a species.
+
+Use index and petal_len as variables. Set bar height as 0.5, color as c, and border color of the bar as black.
+Label Y-Axis as Species
+Label X-Axis as `Petal Length (cm).
+Set Title as Mean Petal Length of Iris Species.
+
+Mark major ticks on Y-Axis at 0.45, 1.45, and 2.45.
+Label the major ticks on Y-Axis as setosa,  versicolor and viriginica respectively.
+
+from matplotlib import pyplot
+import numpy as np
+
+fig = plt.figure(figsize=(12,5))
+ax = fig.add_subplot(111)
+ax.set(title='Mean Petal Length of Iris Species', ylabel='Species', xlabel='Petal Length (cm)')
+
+# Data for the plots e.g. X vs Y
+species = ['setosa', 'versicolor', 'viriginica']
+index = [0.2, 1.2, 2.2]
+petal_len = [1.46, 4.26, 5.55]
+
+# Actual code which will create the graph object
+ax.barh(index, petal_len, height=0.5, color=['c'], edgecolor=['black'], label='Sepal Length')
+
+# Set the tickers or markers on X-axis or Y-Axis
+ax.set_yticks([0.45, 1.45, 2.45])
+ax.set_yticklabels(species)
+
+# Which plots the graph
+plt.legend()
+plt.show()
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+
+import matplotlib
+print(matplotlib.get_configdir())
+
+axes.titlesize : 24
+axes.labelsize : 20
+lines.linewidth : 8
+lines.markersize : 10
+xtick.labelsize : 16
+ytick.labelsize : 16
+
+matplotlib.style.reload_library()
+
+The location of active matplotlibrc file used by matplotlib can be found with below expression:
+	import matplotlib
+	matplotlib.matplotlib_fname()
+	
+For example, if you want to change linewidth and color, the following expressions can be used.
+	import matplotlib as mpl
+	mpl.rcParams['lines.linewidth'] = 2
+	mpl.rcParams['lines.color'] = 'r'
+
+with plt.style.context(['dark_background', 'mystyle']):
+
+with plt.style.context(['dark_background', 'seaborn-poster']):
+
+with plt.style.context('ggplot'):
+    fig = plt.figure(figsize=(8,6))
+    ax = fig.add_subplot(111)
+    ax.set(title='Avg. Daily Temperature of Jan 2018', xlabel='Day', ylabel='Temperature (in deg)', xlim=(0, 30), ylim=(25, 35))
+    days = [1, 5, 8, 12, 15, 19, 22, 26, 29]
+    temp = [29.3, 30.1, 30.4, 31.5, 32.3, 32.6, 31.8, 32.4, 32.7]
+    ax.plot(days, temp, color='green', linestyle='--', linewidth=3)
+    plt.show()
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+Practice Exercise:
+******************
+Generate the following barplot with 'ggplot' style. Use 'with' to apply the style to the code generating the barplot.
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+Create an axis, associated with figure fig, using add_subplot. Name it as ax.
+Define the following lists
+
+​​​ sepal_len = [5.01, 5.94, 6.59]
+​​​​​​sepal_wd = [3.42, 2.77, 2.97]
+petal_len = [1.46, 4.26, 5.55]
+petal_wd = [0.24, 1.33, 2.03]
+species = ['setosa', 'versicolor', 'viriginica']
+species_index1 = [0.7, 1.7, 2.7]
+species_index2 = [0.9, 1.9, 2.9]
+species_index3 = [1.1, 2.1, 3.1]
+species_index4 = [1.3, 2.3, 3.3]
+
+Draw vertical bars showing mean sepal length of a species. Set width of the bars as 0.2, and label it as Sepal Length. Use bar with species_index1 and sepal_len.
+
+Draw vertical bars showing mean sepal length of a species. Set width of bars as 0.2 and label it as Sepal Width. Use bar with species_index2 and sepal_wd.
+
+Draw vertical bars showing mean sepal length of a species. Set width of bars as 0.2 and label it as Petal Length. Use bar with species_index3 and petal_len.
+
+Draw vertical bars showing mean sepal length of a species. Set width of bars as 0.2 and label it as Petal Width. Use bar with species_index4 and petal_wd.
+
+Label X-Axis as Species.
+
+Label Y-Axis as Iris Measurements (cm).
+Set Title as Mean Measurements of Iris Species.
+Limit X-Axis from 0.5 to 3.7.
+Limit Y-Axis from 0 to 10.
+Mark major ticks on X-Axis at 1.1, 2.1, and 3.1.
+Label the major ticks on X-Axis as setosa,  versicolor, and viriginica respectively.
+Add a legend.
+
+with plt.style.context('ggplot'):
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+ax.set(title='Mean Measurements of Iris Species', xlabel='Species', ylabel='Iris Measurements (cm)', xlim=(0.5,3.7), ylim = (0,10))
+
+# Data for the plots e.g. X vs Y
+sepal_len = [5.01, 5.94, 6.59]
+sepal_wd = [3.42, 2.77, 2.97]
+petal_len = [1.46, 4.26, 5.55]
+petal_wd = [0.24, 1.33, 2.03]
+species = ['setosa', 'versicolor', 'viriginica']
+species_index1 = [0.7, 1.7, 2.7]
+species_index2 = [0.9, 1.9, 2.9]
+species_index3 = [1.1, 2.1, 3.1]
+species_index4 = [1.3, 2.3, 3.3]
+
+# Actual code which will create the graph object
+ax.bar(species_index1, sepal_len, width=0.2, color=['c'], edgecolor=['black'], label='Sepal Length')
+ax.bar(species_index2, sepal_wd, width=0.2, color=['m'], edgecolor=['black'], label='Sepal Width')
+ax.bar(species_index3, petal_len, width=0.2, color=['y'], edgecolor=['black'], label='Petal Length')
+ax.bar(species_index4, petal_wd, width=0.2, color=['orange'], edgecolor=['black'], label='Petal Width')
+
+ax.bar(species_index1, sepal_len, width=0.2, label='Sepal Length')
+ax.bar(species_index2, sepal_wd, width=0.2, label='Sepal Width')
+ax.bar(species_index3, petal_len, width=0.2, label='Petal Length')
+ax.bar(species_index4, petal_wd, width=0.2, label='Petal Width')
+
+# Set the tickers or markers on X-axis or Y-Axis
+ax.set_xticks([1.1, 2.1, 3.1])
+ax.set_xticklabels(species)
+
+# Which plots the graph
+plt.legend()
+plt.show()
+
+
+2. test_generate_plot_with_style2
+Regenerate the barplot defined in 'generate_plot_with_style1' using 'seaborn-colorblind' style. Use 'with' for applying the style.
+
+
+with plt.style.context(['dark_background', 'mystyle']):
+
+with plt.style.context(['dark_background', 'seaborn-poster']):
+with plt.style.context(['dark_background', 'seaborn-colorblind']):
+
+3. test_generate_plot_with_style3
+Regenerate the barplot defined in 'generate_plot_with_style1' using 'grayscale' style. Use 'with' for applying the style.
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+SubPlots:
+*********
+
+from matplotlib import pyplot as plt
+import numpy as np
+# plt.style.available
+fig = plt.figure(figsize=(10,8))
+axes1 = plt.subplot(2, 2, 1, title='Plot1')
+axes2 = plt.subplot(2, 2, 2, title='Plot2')
+axes3 = plt.subplot(2, 2, 3, title='Plot3')
+axes4 = plt.subplot(2, 2, 4, title='Plot4')
+plt.show()
+
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+fig = plt.figure(figsize=(10,8))
+gd = gridspec.GridSpec(2,2)
+axes1 = plt.subplot(gd[0,:],title='Plot1')
+axes1.set_xticks([]); axes1.set_yticks([])
+axes2 = plt.subplot(gd[1,0])
+axes2.set_xticks([]); axes2.set_yticks([])
+axes3 = plt.subplot(gd[1,-1])
+axes3.set_xticks([]); axes3.set_yticks([])
+plt.show()
+
+fig = plt.figure(figsize=(12,10))
+gd = gridspec.GridSpec(3,3)
+axes1 = plt.subplot(gd[0,:],title='Plot1')
+axes1.set_xticks([]); axes1.set_yticks([])
+axes2 = plt.subplot(gd[1,:-1], title='Plot2')
+axes2.set_xticks([]); axes2.set_yticks([])
+axes3 = plt.subplot(gd[1:, 2], title='Plot3')
+axes3.set_xticks([]); axes3.set_yticks([])
+axes4 = plt.subplot(gd[2, :-1], title='Plot4')
+axes4.set_xticks([]); axes4.set_yticks([])
+plt.show()
+
+***********************
+test_generate_figure1:
+***********************
+
+Define a numpy array 't' with expression 'np.arange(0.0, 5.0, 0.01)'.
+
+Define another numpy array 's1' with expression 'np.sin(2np.pit)'
+
+Define one more numpy array 's2' with expression 'np.sin(4np.pit)'.
+
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+
+Create an axes, using plt.subplot function. Name it as axes1. The subplot must point to the first virtual grid created by 2 rows and 1 column. Set 'title' argument to 'Sin(2pix)'.
+
+Draw a line plot of 't' and 's1' using the 'plot' function on 'axes1`.
+
+Create another axes, using the plt.subplot function. Name it as axes2. The subplot must point to the second virtual grid created by 2 rows and 1 column. Set 'title' argument to 'Sin(4pix)'. Set 'sharex' argument to 'axes1' and 'sharey' argument to 'axes1'.
+
+Draw a line plot of 't' and 's2' using the 'plot' function on 'axes2`
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+t = np.arange(0.0,5.0,0.01)
+s1 = np.sin(2*np.pi*t)
+s2 = np.sin(4*np.pi*t)
+
+fig = plt.figure(figsize=(8,6))
+
+axes1 = plt.subplot(2,1,1, title='Sin(2pix)')
+axes1.plot(t,s1)
+
+axes2 = plt.subplot(2,1,2, title='Sin(4pix)')
+axes2.plot(t,s2)
+plt.show()
+
+****************************
+2. test_generate_figure2
+****************************
+
+Set random seed to 1000 using the expression 'np.random.seed(1000)'.
+Define a numpy array 'x' with expression 'np.random.rand(10)'.
+Define another numpy array 'y' with expression 'np.random.rand(10)'.
+Define one more numpy array 'z' with expression 'np.sqrt(x2 + y2)'.
+
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+
+Create an axes, using plt.subplot function. Name it as axes1. The subplot must point to the first virtual grid created by 2 rows and 2 columns. Set 'title' argument to 'Scatter plot with Upper Traingle Markers'.
+
+Draw a scatter plot of 'x' and 'y' using 'scatter' function on 'axes1`. Set argument 's' to 80, 'c' to z and 'marker' to '^'.
+
+Add ticks on X-Axis at 0.0, 0.4, 0.8, 1.2 and ticks on Y-Axis at -0.2, 0.2, 0.6, 1.0 respectively
+
+Create an axes, using plt.subplot function. Name it as axes2. The subplot must point to the Second virtual grid created by 2 rows and 2 columns. Set 'title' argument to 'Scatter plot with Plus Markers'.
+
+Draw a scatter plot of 'x' and 'y' using 'scatter' function on 'axes2`. Set argument 's' to 80, 'c' to 'z' and 'marker' to '+'.
+
+Add ticks on X-Axis at 0.0, 0.4, 0.8, 1.2 and ticks on Y-Axis at -0.2, 0.2, 0.6, 1.0 respectively.
+
+
+Create an axes, using plt.subplot function. Name it as axes3. The subplot must point to the Third virtual grid created by 2 rows and 2 columns. Set 'title' argument to 'Scatter plot with Circle Markers'.
+
+Draw a scatter plot of 'x' and 'y' using 'scatter' function on 'axes3`. Set argument 's' to 80, 'c' to 'z' and 'marker' to 'o'.
+
+Add ticks on X-Axis at 0.0, 0.4, 0.8, 1.2 and ticks on Y-Axis at -0.2, 0.2, 0.6, 1.0 respectively.
+
+Create an axes, using plt.subplot function. Name it as axes4. The subplot must point to the Fourth virtual grid created by 2 rows and 2 columns. Set 'title' argument to 'Scatter plot with Diamond Markers'.
+
+Draw a scatter plot of 'x' and 'y' using 'scatter' function on 'axes4`. Set argument 's' to 80, 'c' to 'z' and 'marker' to 'd'.
+
+Add ticks on X-Axis at 0.0, 0.4, 0.8, 1.2 and ticks on Y-Axis at -0.2, 0.2, 0.6, 1.0 respectively
+
+Adjust the entire layout with expression 'plt.tight_layout()'.
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+np.random.seed(1000)
+x = np.random.rand(10)
+y = np.random.rand(10)
+z = np.sqrt(x + y)
+
+
+fig = plt.figure(figsize=(8,6))
+
+axes1 = plt.subplot(2,2,1, title='Scatter plot with Upper Traingle Markers')
+axes1.scatter(x,y, s=80, c=z,marker='^')
+
+axes1.set_xticks([0.0, 0.4, 0.8, 1.2])
+axes1.set_yticks([-0.2, 0.2, 0.6, 1.0])
+
+axes2 = plt.subplot(2,2,2, title='Scatter plot with Plus Markers')
+axes2.scatter(x,y, s=80, c=z,marker='+')
+
+axes2.set_xticks([0.0, 0.4, 0.8, 1.2])
+axes2.set_yticks([-0.2, 0.2, 0.6, 1.0])
+
+axes3 = plt.subplot(2,2,3, title='Scatter plot with Circle Markers')
+axes3.scatter(x,y, s=80, c=z,marker='o')
+
+axes3.set_xticks([0.0, 0.4, 0.8, 1.2])
+axes3.set_yticks([-0.2, 0.2, 0.6, 1.0])
+
+axes4 = plt.subplot(2,2,4, title='Scatter plot with Diamond Markers')
+axes4.scatter(x,y, s=80, c=z,marker='d')
+
+axes4.set_xticks([0.0, 0.4, 0.8, 1.2])
+axes4.set_yticks([-0.2, 0.2, 0.6, 1.0])
+
+plt.tight_layout()
+plt.show()
+
+**************************
+3. test_generate_figure3
+**************************
+
+Define a numpy array 'x' with expression 'np.arange(1, 101)'.
+Define another numpy array 'y1' with expression 'y1 = x'.
+Define another numpy array 'y2' with expression 'y1 = x**2'.
+Define another numpy array 'y3' with expression 'y1 = x**3'.
+
+Create a figure of size 8 inches in width, and 6 inches in height. Name it as fig.
+Define a grid 'g' of 2 rows and 2 columns, using 'GridSpec' function. Ensure that 'matplotlib.gridspec' is imported, before defining the grid.
+
+Create an axes, using plt.subplot function. Name it as axes1. The subplot must span the 1st row and 1st column of the defined grid 'g'. Set 'title' argument to 'y = x'.
+Draw a line plot of 'x' and 'y1' using 'plot' function on 'axes1`.
+
+Create an axes, using plt.subplot function. Name it as axes2. The subplot must span 2nd row and 1st column of defined grid 'g'. Set 'title' argument to 'y = x**2'.
+Draw a line plot of 'x' and 'y2' using 'plot' function on 'axes2`.
+
+Create an axes, using plt.subplot function. Name it as axes3. The subplot must span all rows of 2nd column of defined grid 'g'. Set 'title' argument to 'y = x**3'.
+Draw a line plot of 'x' and 'y3' using 'plot' function on 'axes3`.
+
+Adjust the entire layout with the expression 'plt.tight_layout()'.
+
+import numpy as np
+import matplotlib.gridspec as gridspec
+from matplotlib import pyplot as plt
+
+x = np.arange(1, 101)
+y1 = x
+y2 = x**2
+y3 = x**3
+
+fig = plt.figure(figsize=(8,6))
+gd = gridspec.GridSpec(2,2)
+
+axes1 = plt.subplot(gd[0,0], title='y = x')
+axes1.plot(x,y1)
+
+axes2 = plt.subplot(gd[1,0], title='y = x**2')
+axes2.plot(x,y2)
+
+axes3 = plt.subplot(gd[:,1], title='y = x**3')
+axes3.plot(x,y3)
+
+plt.tight_layout()
+plt.show()
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._

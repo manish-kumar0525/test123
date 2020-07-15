@@ -1,0 +1,384 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Working with Filters in Flask:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# This requires that the 'pip3 install --user Werkzeug==0.14' shld be installed else will get incompatible package issues.
+# accessingPythonDataTypes.html
+<h1> Accessing Python Data Types in Templates </h1>
+<ul>
+	<li>String : {{ data.str }}</li>
+	<li>Integer : {{ data.int }}</li>
+	<li>Float : {{ data.float }}</li>
+	<li>List : {{ data.list }}</li>
+	<li>Second element of List : {{ data.list.1 }}</li>
+	<li>Tuple : {{ data.tuple }}</li>
+	<li>Third element of Tuple : {{ data.tuple.2 }}</li>
+	<li>Email of Dictionary Object : {{ data.dict.email }}</li>
+	<li>Boolean : {{ data.bool }}</li>
+	<li>None : {{ data.none }}</li>
+	<li> Elements of a Set :
+		<ul>
+		{% for element in data.set %}
+			<li> {{ element }} </li>
+		{% endfor %}
+		</ul>
+	</li>
+</ul>
+
+
+# Define custom filters
+def evenFilter(sequence):
+  # Complete the definition of evenFilter below
+  return [num for num in sequence if(num%2 ==0)]
+
+# usingfilters.html
+<h1> Usage of various Jinja Filters in Templates </h1>
+<ul>
+	<li> Round : {{ data.round | round(0, "ceil") }}</li>
+	<li> Dictsort : {{ data.dictsort | dictsort(by='value', reverse=True) }}</li>
+	<li> Map : {{ data.map | map('capitalize') | join(', ') }}</li>
+	<li> Replace : {{ data.replace | replace('old', 'new') }}</li>
+	<li> ToJson : {{ data.tojson | tojson }}</li>
+	<li> EvenFilter : {{ data.evenfilter | evenFilter }} </li>
+</ul>
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Working with Flask Command Line Interface
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+import click
+from flask import Flask
+
+app = Flask(__name__)
+# Define 'power' command below
+@app.cli.command()
+@click.argument('x', type=int)
+@click.argument('y', type=int)
+def power(x,y):
+  print(x**y)
+
+# Define 'repeat' command below
+@app.cli.command()
+@click.argument('s',type=str)
+@click.argument('n',type=int)
+def repeat(s,n):
+  print(s*n)
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Flask -  Exercise 4 - Creating Web Forms
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+The length of the input string "Quote Author" must be between 3 and 100, and must display the message "[Field must be between 3 and 100 characters long.]" to the user.If the "Quote Author" field has a null value, the message "[This field is required.]" must be displayed to the user.
+
+The length of "Quote" must be between 3 and 200, and must display the message "[Field must be between 3 and 200 characters long.]"  to the user.If the "Quote" field has a null value, the message "[This field is required.]" must be displayed to the user.
+
+# forms.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, validators
+class QuoteForm(FlaskForm):
+   qauthor = StringField("Quote Author", [validators.DataRequired(message='This field is required.'), validators.Length(min=3, max=100,message="Field must be between 3 and 100 characters long.")])
+   qstring = StringField("Quote",[validators.DataRequired(message='This field is required.'), validators.Length(min=3, max=200,message="Field must be between 3 and 200 characters long.")])
+   submit = SubmitField("Add Quote")
+
+
+[validators.DataRequired(), validators.Email("Please provide a valid email address.")]
+
+# base.html
+<html>
+
+    <head>
+
+      {% if title %}
+
+      <title>{{ title }}</title>
+
+      {% else %}
+
+      <title>Welcome to HelloApp</title>
+
+      {% endif %}
+
+    </head>
+
+    <body>
+
+        <div>HelloApp: <a href="/">Home</a></div>
+
+        <hr>
+
+        {% block content %}{% endblock %}
+
+    </body>
+
+</html>
+
+
+# addquote.html
+# {% extends 'base.html' %} - optional 
+
+# https://flask.palletsprojects.com/en/1.1.x/patterns/wtforms/
+# In below the quoteauthor - shld be same as defined in form.py 
+
+{% block content %}
+    <h2 style = "text-align: center;">Quote Author Form</h2>
+<form action = "" method = post>
+         <fieldset>
+            <legend>Quote Author Form</legend>
+            {{ form.csrf_token }}
+            <div style = "font-size:20px; font-weight:bold; margin-left:150px;" >
+               {{ form.qauthor.label }} : {{ form.qauthor }} <br>
+               {% for error in form.qauthor.errors %}
+               <span style="color: red;">[{{ error }}]</span><br>
+               {% endfor %}
+               <br>
+               {{ form.qstring.label }} : {{ form.qstring }} <br><br>
+               {% for error in form.qstring.errors %}
+               <span style="color: red;">[{{ error }}]</span><br>
+               {% endfor %}
+               <br>
+               {{ form.submit }}
+            </div>
+         </fieldset>
+      </form>
+{% endblock %}
+
+# routes.py
+# from flask import request
+@app.route('/addquote/', methods=['GET', 'POST'])
+def add_quote():
+	form = QuoteForm()
+	if request.method == 'POST' and form.validate_on_submit():
+		quote = Quotes(quoteauthor=form.qauthor.data, quotestring=form.qstring.data )
+		try:
+			db.session.add(quote)
+			db.session.commit()
+		except Exception:
+			db.session.rollback()
+		return render_template('addquote_confirmation.html', title = 'Add Quote Confirmation')
+	return render_template('addquote.html', title = 'Quote Input Form', form = form)
+
+# Below command run inside the project folder
+export FLASK_APP=main.py; flask db init
+flask db migrate -m "Creating quote table"
+#very first time as well you have to run this to commit and create an empty table.
+flask db upgrade
+
+
+https://servers95j14x7-ws-dev-server-8000.ind.hackerrank.com/
+https://servers95j14x7-ws-dev-server-8000.ind.hackerrank.com/addquote/
+https://servers95j14x7-ws-dev-server-8000.ind.hackerrank.com/quotes/
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+sampleproject/
+
+   projenv/
+
+      ....
+
+   helloapp/
+
+       templates/
+
+          index.html
+
+          users.html
+
+       __init__.py
+
+       hello.py
+
+   main.py
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Flask -  Exercise 4 - Defining Models
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    id = db.Column(db.Integer, primary_key=True)
+
+    quoteauthor = db.Column(db.String(100), index=True)
+
+    quotestring = db.Column(db.String(200), index=True)
+
+def __repr__(self):
+	return "<Quote : {}>".format(self.quotestring)
+
+
+pip install flask-migrate
+
+# Perform Database Migration and insert data into the database from backend
+# Below is the part of the __init__.py file in the project folder helloapp
+from flask import Flask
+from .config import Config
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+app = Flask(__name__)
+app.config.from_object(Config)
+db = SQLAlchemy(app)
+
+from helloapp import routes, models
+from helloapp import db
+
+
+# models.py
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    quoteauthor = db.Column(db.String(100), index=True)
+    quotestring = db.Column(db.String(200), index=True)
+
+    def __repr__(self):
+        return "<Quote : {}>".format(self.quotestring)
+
+
+# Below command run inside the project folder
+flask db init
+flask db migrate -m "Creating quote table"
+#very first time as well you have to run this to commit and create an empty table.
+flask db upgrade
+
+# Below would NOT WORK
+export FLASK_APP=hello.py 
+export FLASK_APP=models.py
+export FLASK_APP=main.py; flask db init
+
+# this one worked as the the line of code below export statement, in a matured flask applications, 
+# Below line of code - 'export', informs Flask` about the location of your application.
+export FLASK_APP=main
+
+	if __name__ == '__main__':
+		app.run()
+
+#Enter into the flask shell to interactively work with the Database
+flask shell
+
+>>> from helloapp.models import Quotes
+
+>>> quote1 = Quotes(quoteauthor="Albert Einstein", quotestring="Only two things are infinite, the universe and human stupidity, and I'm not sure about the former.")
+
+>>> quote2 = Quotes(quoteauthor='Abraham Lincoln', quotestring="Give me six hours to chop down a tree and I will spend the first four sharpening the axe.")
+
+#Finally let's save the changes with below statements. Only db.session.commit() will write the changes to database.
+
+>>> from helloapp import db
+
+>>> db.session.add(quote1)
+
+>>> db.session.add(quote2)
+
+>>> db.session.commit()
+
+Quotes.query.all()
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Flask -  Exercise 3 - Using Templates
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# hello.py
+from flask import Flask, render_template
+import random
+
+## Define a flask application name 'app' below
+app = Flask(__name__)
+
+
+## Define below a view function 'hello', which displays the message 
+## "Hello World!!! I've run my first Flask application."
+## The view function 'hello' should be mapped to URL '/' .
+## The view function must render the template 'index.html'
+@app.route('/')
+def hello():
+	return render_template('index.html')
+
+# index.html
+"Hello World!!! I've run my first Flask application."
+
+https://serverv2504qrw-ws-dev-server-8000.ine.hackerrank.com/
+
+## Define below a view function 'hello_user', which takes 'username' as an argument 
+## and returns the html string containing a 'h2' header  "Hello <username>"
+## After displaying the hello message, the html string must also display one quote, 
+## randomly chosen from the provided list `quotes` 
+## Before displaying the quote, the html string must contain the 'h3' header 'Quote of the Day for You' 
+## The view function 'hello_user' should be mapped to URL '/hello/<username>/' .
+## The view function must render the template 'hello_user.html'
+## Use the below list 'quotes' in 'hello_user'  function
+## quotes = [
+##                "Only two things are infinite, the universe and human stupidity, and I'm not sure about the former.",
+##                "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.",
+##                "Tell me and I forget. Teach me and I remember. Involve me and I learn.",
+##                "Listen to many, speak to a few.",
+##                "Only when the tide goes out do you discover who's been swimming naked."
+##    ]
+@app.route('/hello/<username>/')
+def hello_user(username):
+	quotes = [
+	"Only two things are infinite, the universe and human stupidity, and I'm not sure about the former.",
+	"Give me six hours to chop down a tree and I will spend the first four sharpening the axe.",
+	"Tell me and I forget. Teach me and I remember. Involve me and I learn.",
+	"Listen to many, speak to a few.",
+	"Only when the tide goes out do you discover who's been swimming naked."
+   ]
+
+   singlequotes = random.choice(quotes)
+
+	return render_template('hello_user.html',user=username,quote=singlequotes)
+
+# hello_user.html
+<h2>Hello {{user}} </h2>
+<h3>Quote of the Day for You</h3> {{quote}}
+
+https://serverv2504qrw-ws-dev-server-8000.ine.hackerrank.com/hello/marry
+
+
+## Define below a view function 'display_quotes', which returns an html string 
+## that displays all the quotes present in 'quotes' list in a unordered list.
+## Before displaying 'quotes' as an unordered list, the html string must also include a 'h1' header "Famous Quotes".
+## The view function 'display_quotes' should be mapped to URL '/quotes/' .
+## The view function must render the template 'quotes.html'
+## Use the below list 'quotes' in 'display_quotes'  function
+## quotes = [
+##                "Only two things are infinite, the universe and human stupidity, and I'm not sure about the former.",
+##                "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.",
+##                "Tell me and I forget. Teach me and I remember. Involve me and I learn.",
+##                "Listen to many, speak to a few.",
+##                "Only when the tide goes out do you discover who's been swimming naked."
+##    ]
+@app.route('/quotes/')
+def display_quotes():
+	quotes = [
+	"Only two things are infinite, the universe and human stupidity, and I'm not sure about the former.",
+	"Give me six hours to chop down a tree and I will spend the first four sharpening the axe.",
+	"Tell me and I forget. Teach me and I remember. Involve me and I learn.",
+	"Listen to many, speak to a few.",
+	"Only when the tide goes out do you discover who's been swimming naked."
+   ]
+   return render_template('quotes.html',quts = quotes)
+
+# 'quotes.html'
+<h1>Famous Quotes</h1>
+{% for quote in quts %}
+{{quote}}
+{% endfor %}
+
+https://serverv2504qrw-ws-dev-server-8000.ine.hackerrank.com/quotes/
+
+## Write the required code below which runs flask applictaion 'app' defined above
+## on host 0.0.0.0 and port 8000    
+if __name__=='__main__':
+	app.run(host='0.0.0.0', port=8000)
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Flask -  Exercise 2 - View Functions
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+https://server3kfo3vuf-ws-dev-server-8000.ine.hackerrank.com/
+https://server3kfo3vuf-ws-dev-server-8000.ine.hackerrank.com/quotes/
+https://server3kfo3vuf-ws-dev-server-8000.ine.hackerrank.com/hello/john
+
+<h2>Hello username</h2><h3>Quote of the Day for You</h3> + singlequotes
+
+<h1>Famous Quotes</h1> + q1 +q2 +q3 +q4 +q5

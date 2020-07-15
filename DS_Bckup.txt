@@ -1,0 +1,2045 @@
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+
+
+
+
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+
+with open(r"vector.pkl", "wb") as output_file:
+	pickle.dump(X, output_file)
+
+with open(r"NB_spam_model.pkl", "wb") as output_file:
+	pickle.dump(clf, output_file)
+
+pickle.dump(clf, open('NB_spam_model.pkl',"wb"))
+
+curl http://0.0.0.0:8001/
+curl http://0.0.0.0:8001/predict
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+Most Frequently used commands:
+-> All models are subclass of the django.db.models.Model class. Each class will
+be transformed into database tables. Each field is represented by instances of
+django.db.models.Field subclasses (built-in Django core) and will be
+translated into database columns.
+	+=  If we don’t specify a primary key for a model, Django will automatically generate it for us.
+	+= 
+	+= 
+	+= 
+
+-> Migrating the Models means ask Django to create the database for use:
+	python manage.py makemigrations # this generates migrations files , which will be used by Django to create the tables and columns.
+	python manage.py migrate # this one apply the migration, generated, to the database.
+
+python manage.py shell -- interactive console for Django
+
+Model Manager : Every Django model comes with a special attribute; we call it a Model Manager
+
+
+
+-> 
+
+-> 
+
+-> 
+
+
+
+
+urlpatterns = [
+    path('blog/', include(sitepatterns), {'blog_id': 6}),
+]
+
+sitepatterns = [
+    path('archive/', views.archive),
+    path('about/', views.about),
+]
+
+urlpatterns = [
+    path('<year>/music/', include('entertain.urls.music')),
+]
+#in entertain/urls/music.py
+urlpatterns = [
+    path('', views.music.index),
+    path('history/', views.music.history),
+]
+
+https://djbook.ru/rel1.4/ref/templates/api.html
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+from django.test import TestCase
+import datetime
+from django.utils import timezone
+from django.urls import reverse
+
+from .models import question
+
+# Create your tests here.
+class QuestionModelTests(TestCase):
+    def test_question_is_future(self):
+        ''' is_recent should be false for questions published with future date'''
+        time=timezone.now() + datetime.timedelta(days=20)
+        future_question=question(pubdate=time)
+        self.assertIs(future_question.is_recent(), False)
+        
+    def test_question_is_old(self):
+        ''' is_recent should be false for questions published with older date'''
+        time = timezone.now() - datetime.timedelta(days=1,seconds=1)
+        old_question = question(pubdate=time)
+        self.assertIs(old_question.is_recent(),False)
+        
+    def test_question_is_current(self):
+        ''' is_recent should be true for questions published within 1 day'''
+        time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
+        recent_question = question(pubdate=time)
+        self.assertIs(recent_question.is_recent(),True)
+
+def create_question(questionname,days):
+    """
+    Create a question with the given `question_text` and published the
+    given number of `days` offset to now (negative for questions published
+    in the past, positive for questions that have yet to be published).
+    """
+    time=timezone.now() + datetime.timedelta(days=days)
+    return question.objects.create(questionname=questionname,pubdate=time)
+
+class QuestionIndexViewTests(TestCase):
+    def test_no_questions(self):
+        """
+        If no questions exist, an appropriate message is displayed.
+        """
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Questions not available for polling!")
+        self.assertQuerysetEqual(response.context['recent_question_list'], [])
+        
+    def test_past_question(self):
+        """
+        Questions with a pub_date in the past are displayed on the
+        index page.
+        """
+        create_question(questionname="Past question.",days=-30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question.>'])
+        
+    def test_future_question(self):
+        """
+        Questions with a pub_date in the future aren't displayed on
+        the index page.
+        """
+        create_question(questionname="Future question.", days=30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertContains(response, "Questions not available for polling!")
+        self.assertQuerysetEqual(response.context['recent_question_list'], [])
+        
+    def test_past_future_question(self):
+        create_question(questionname="Past question.", days=-30)
+        create_question(questionname="Future question.", days=30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question.>'])
+        
+    def test_two_questions(self):
+        create_question(questionname="Past question 1.", days=-30)
+        create_question(questionname="Past question 2.", days=-10)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question 2.>', '<question: Past question 1.>'])
+
+class QuestionDetailViewTests(TestCase):
+    def test_future_question(self):
+        """
+        The detail view of a question with a pub_date in the future
+        returns a 404 not found.
+        """
+        future_question = create_question(questionname='Future question.', days=5)
+        url = reverse('webpoll:detail',args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+        
+    def test_past_question(self):
+        """
+        The detail view of a question with a pub_date in the past
+        displays the question's text.
+        """
+        past_question=create_question(questionname="Past Question", days=-5)
+        url = reverse('webpoll:detail',args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertContains(response, past_question.questionname)
+        
+cd /projects/challenge && python manage.py makemigrations && python manage.py migrate --run-syncdb && python manage.py test
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Django -  Exercise 7 - Test views
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+from django.test import TestCase
+import datetime
+from django.utils import timezone
+from django.urls import reverse
+
+from .models import question
+
+def create_question(questionname,days):
+    # write question creation definition here
+    time=timezone.now() + datetime.timedelta(days=days)
+    return question(questionname,time)
+
+
+class QuestionHomeViewTests(TestCase):
+    def test_no_questions(self):
+        """ If no questions exist, an appropriate message is displayed."""
+        #Write implementation code here
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Questions not available for polling!")
+        self.assertQuerysetEqual(response.context['recent_question_list'], [])
+
+
+    def test_past_question(self):
+        """ Questions with a pubdate in the past are displayed on the home page."""
+        #Write implementation code here
+        create_question(questionname="Past question.",days=-30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question.>'])
+
+    def test_future_question(self):
+        """ Questions with a pub_date in the future aren't displayed on the index page."""
+        #Write implementation code here
+		create_question(questionname="Future question.", days=30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertContains(response, "Questions not available for polling!")
+        self.assertQuerysetEqual(response.context['recent_question_list'], [])
+
+    def test_past_future_question(self):
+        #Write implementation code here
+		create_question(questionname="Past question.", days=-30)
+        create_question(questionname="Future question.", days=30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question.>'])
+
+    def test_two_questions(self):
+        #Write implementation code here
+		create_question(questionname="Past question 1.", days=-30)
+        create_question(questionname="Past question 2.", days=-10)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question 2.>', '<question: Past question 1.>'])
+
+class QuestionDetailViewTests(TestCase):
+    def test_future_question(self):
+        """ The detail view of a question with a pubdate in the future returns a 404 not found. """
+        #Write implementation code here
+		future_question = create_question(questionname='Future question.', days=5)
+        url = reverse('webpoll:detail',args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+        
+
+    def test_past_question(self):
+        """ The detail view of a question with a pubdate in the past displays the question's text. """
+        #Write implementation code here
+		past_question=create_question(questionname="Past Question", days=-5)
+        url = reverse('webpoll:detail',args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertContains(response, past_question.questionname)
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Django - Exercise 6 - Test models
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+# webpoll/test.py:
+from django.test import TestCase
+import datetime
+from django.utils import timezone
+
+from .models import question
+
+class QuestionModelTests(TestCase):
+    def test_question_is_future(self):
+        ''' is_recent should be false for questions published with future date'''
+        #write implementation here
+        time=timezone.now() + datetime.timedelta(days=20)
+        future_question=question(pubdate=time)
+        self.assertIs(future_question.is_recent(), False)
+        
+    def test_question_is_old(self):
+        ''' is_recent should be false for questions published with older date'''
+        #write implementation here
+        time = timezone.now() - datetime.timedelta(days=10)
+        old_question = question(pubdate=time)
+        self.assertIs(old_question.is_recent(),False)
+        
+    def test_question_is_current(self):
+        ''' is_recent should be true for questions published within 1 day'''
+        #write implementation here
+        time = time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
+        recent_question = question(pubdate=time)
+        self.assertIs(recent_question.is_recent(),True)
+
+
+# webpoll/urls.py        
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    url(r'^(?P<pk>[0-9]+)/$',views.QuestionDetailView.as_view(),name='detail'),
+    url(r'^(?P<question_id>[0-9]+)/vote/$', views.vote, name='vote'),
+    url(r'^(?P<pk>[0-9]+)/result/$',views.VoteResultView.as_view(),name='result'),
+    ]
+
+
+# views.py
+from django.views import generic
+from django.utils import timezone
+from django.shortcuts import get_object_or_404,render
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+
+from .models import question,choice
+
+# Create your views here.
+class HomeView(generic.ListView):
+    template_name='webpoll/home.html'
+    context_object_name='recent_question_list'
+    def get_queryset(self):
+        # return the recent 6 published questions
+        return question.objects.filter(pubdate__lte=timezone.now()).order_by('-pubdate')[:6]
+
+class QuestionDetailView(generic.DetailView):
+    model=question
+    template_name='webpoll/question_detail.html'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now())
+
+def vote(request, question_id):
+    quest=get_object_or_404(question,pk=question_id)
+    try:
+        selected_choice = quest.choice_set.get(pk=request.POST['choice'])
+    
+    except (KeyError, choice.DoesNotExist):
+        return render(request, 'webpoll/question_detail.html', {
+            'question':quest,
+            'error_message':"You didn't select a choice",
+            })
+    else:
+        selected_choice.vote+=1
+        selected_choice.save()
+        return HttpResponseRedirect(reverse('webpoll:result',args=(question_id,)))
+    
+class VoteResultView(generic.DetailView):
+    model=question
+    template_name='webpoll/vote_result.html'
+
+# home.html
+<!DOCTYPE html>
+{% if recent_question_list %}
+    <ul>
+    {% for question in recent_question_list %}
+        <li><a href="{% url 'webpoll:detail' question.id %}">{{ question.questionname }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Questions not available for polling!</p>
+{% endif %}
+
+
+# question_detail.html
+<!DOCTYPE html>
+
+<h2>{{ question.questionname }}</h2>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'webpoll:vote' question.id %}" method="post">
+{% csrf_token %}
+{% for choice in question.choice_set.all %}
+    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+    <label for="choice{{ forloop.counter }}">{{ choice.choicename }}</label><br />
+{% endfor %}
+<input type="submit" value="Submit Vote" />
+</form>
+
+# vote_result.html
+
+<!DOCTYPE html>
+
+<h2>{{ question.questionname }}</h2>
+<ul>
+{% for choice in question.choice_set.all %}
+    <li>
+    {{ choice.choicename }} -- {{ choice.vote }} vote{{ choice.vote|pluralize }}
+    </li> 
+{% endfor %}
+</ul>
+
+<a href="{% url 'webpoll:detail' question.id %}"> Vote Again? </a>
+
+# The tests.py file that comes with every app can be leveraged. To run the tests, use
+# $ python manage.py test polls
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Django - Exercise 5 - View Results
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+# webpoll/views.py
+from django.views import generic
+from django.utils import timezone
+from django.shortcuts import get_object_or_404,render
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+
+from .models import question,choice
+
+class HomeView(generic.ListView):
+    template_name='webpoll/home.html'
+    context_object_name='recent_question_list'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now()).order_by('-pubdate')[:6]
+
+class QuestionDetailView(generic.DetailView):
+    model=question
+    template_name='webpoll/question_detail.html'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now())
+
+def vote(request, question_id):
+    quest=get_object_or_404(question,pk=question_id)
+    try:
+        selected_choice = quest.choice_set.get(pk=request.POST['choice'])
+    
+    except (KeyError, choice.DoesNotExist):
+        return render(request, 'webpoll/question_detail.html', {
+            'question':quest,
+            'error_message':"You didn't select a choice",
+            })
+    else:
+        selected_choice.vote+=1
+        selected_choice.save()
+        return HttpResponseRedirect(reverse('webpoll:result',args=(question_id,)))
+    
+# VoteResultView implementation here
+
+
+# webpoll.urls.py
+#from django.urls import path
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    url(r'^(?P<pk>[0-9]+)/$',views.QuestionDetailView.as_view(),name='detail'),
+    url(r'^(?P<question_id>[0-9]+)/vote/$', views.vote, name='vote'),
+    # URL implementation here
+    ]
+
+
+# home.html
+<!DOCTYPE html>
+{% if recent_question_list %}
+    <ul>
+    {% for question in recent_question_list %}
+        <li><a href="{% url 'webpoll:detail' question.id %}">{{ question.questionname }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Questions not available for polling!</p>
+{% endif %}
+
+# question_detail.html
+<!DOCTYPE html>
+
+<h2>{{ question.questionname }}</h2>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'webpoll:vote' question.id %}" method="post">
+{% csrf_token %}
+{% for choice in question.choice_set.all %}
+    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+    <label for="choice{{ forloop.counter }}">{{ choice.choicename }}</label><br />
+{% endfor %}
+<input type="submit" value="Submit Vote" />
+</form>
+
+# vote_result.html
+<!DOCTYPE html>
+
+<h2><!-- code display question --></h2>
+<ul>
+<!-- code to display choice with voting results -->
+</ul>
+
+<!-- code to vote again -->
+<a></a>
+
+
+python manage.py createsuperuser
+frescoadmin
+frescoadmin
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Django - Exercise 4 - View Results
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+# webpoll/views.py
+from django.views import generic
+from django.utils import timezone
+from django.shortcuts import get_object_or_404,render
+from django.http import HttpResponse
+# from django.urls import reverse
+
+from .models import question,choice
+
+class HomeView(generic.ListView):
+    template_name='webpoll/home.html'
+    context_object_name='recent_question_list'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now()).order_by('-pubdate')[:6]
+
+class QuestionDetailView(generic.DetailView):
+    model=question
+    template_name='webpoll/question_detail.html'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now())
+
+def vote(request, question_id):
+    quest=get_object_or_404(question,pk=question_id)
+    try:
+        selected_choice = quest.choice_set.get(pk=request.POST['choice'])
+    
+    except (KeyError, choice.DoesNotExist):
+        return render(request, 'webpoll/question_detail.html', {
+            'question':quest,
+            'error_message':"You didn't select a choice",
+            })
+    else:
+        selected_choice.vote+=1
+        selected_choice.save()
+        return HttpResponse(quest.questionname,) #Incomplete answers and one more parameters needs to return that is - 'voted choice'
+
+
+# home.html
+<!DOCTYPE html>
+{% if recent_question_list %}
+    <ul>
+    {% for question in recent_question_list %}
+        <li><a href="{% url 'webpoll:detail' question.id %}">{{ question.questionname }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Questions not available for polling!</p>
+{% endif %}
+
+
+# question_detail.html
+<!DOCTYPE html>
+
+<h2>{{ question.questionname }}</h2>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'webpoll:vote' question.id %}" method="post">
+{% csrf_token %}
+{% for choice in question.choice_set.all %}
+    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+    <label for="choice{{ forloop.counter }}">{{ choice.choicename }}</label><br />
+{% endfor %}
+<input type="submit" value="Submit Vote" />
+</form>
+
+
+
+# webpoll.urls.py
+#from django.urls import path
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    url(r'^(?P<pk>[0-9]+)/$',views.QuestionDetailView.as_view(),name='detail'),
+    # URL implementation here
+    url(r'^(?P<question_id>[0-9]+)/vote/$', views.vote, name='vote'),
+    ]
+
+
+https://serveru7ozcf4k-ws-dev-server-8000.ind.hackerrank.com/
+https://serveru7ozcf4k-ws-dev-server-8000.ind.hackerrank.com/admin
+https://serveru7ozcf4k-ws-dev-server-8000.ind.hackerrank.com/webpoll
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+
+# Preprocessing for numerical data
+numerical_transformer = SimpleImputer(strategy='constant')
+
+# Preprocessing for categorical data
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# Bundle preprocessing for numerical and categorical data
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numerical_transformer, numerical_cols),
+        ('cat', categorical_transformer, categorical_cols)
+    ])
+
+# Define model
+model = RandomForestRegressor(n_estimators=100, random_state=0)
+
+# Bundle preprocessing and modeling code in a pipeline
+clf = Pipeline(steps=[('preprocessor', preprocessor),
+                      ('model', model)
+                     ])
+
+# Preprocessing of training data, fit model 
+clf.fit(X_train, y_train)
+
+# Preprocessing of validation data, get predictions
+preds = clf.predict(X_valid)
+
+print('MAE:', mean_absolute_error(y_valid, preds))
+
+
+Solution:
+
+def get_score(n_estimators):
+    my_pipeline = Pipeline(steps=[ ('preprocessor', SimpleImputer()), ('model', RandomForestRegressor(n_estimators, random_state=0)) ])
+    scores = -1 * cross_val_score(my_pipeline, X, y, cv=3, scoring='neg_mean_absolute_error')
+    return scores.mean()
+
+no_trees = [50,100,150,200,250,300,350,400]
+result = {}
+
+[result[50*i] for i in range(1,9): get_score(no_trees[i])]
+for i in range(1,9):
+	result[50*i] = get_score(50*i)
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+Sp3 : NLP using Python:
+>>>>>>>>>>>>>>>>>>>>>>>
+
+
+Total Word Count: 
+>.>>> from nltk.book import *
+>>> type(text1)
+#<class 'nltk.text.Text'>
+>>> n_words = len(text1)
+>>> n_words
+
+Unique Word Count: 
+>>> n_unique_words = len(set(text1))
+>>> n_unique_words
+# 19317
+
+Transforming Words: 
+>>> text1_lcw = [ word.lower() for word in set(text1) ]
+>>> n_unique_words_lc = len(set(text1_lcw))
+>>> n_unique_words_lc
+# 17231
+
+Word Coverage: 
+>>> word_coverage1 = n_words / n_unique_words
+>>> word_coverage1
+# 13.502044830977896
+# On average, a single word in text1 is repeated 13.5 times.
+
+>>> word_coverage2 = n_words / n_unique_words_lc
+>>> word_coverage2
+# 15.136614241773549
+
+Filtering Words: 
+>>> big_words = [word for word in set(text1) if len(word) > 17 ]
+>>> big_words
+# ['uninterpenetratingly', 'characteristically']
+
+>>> sun_words = [word for word in set(text1) if word.startswith('Sun') ]
+>>> sun_words
+# ['Sunday', 'Sunset', 'Sunda']
+
+Frequency Distribution: 
+>>> text1_freq = nltk.FreqDist(text1)
+>>> text1_freq['Sunday']
+
+
+>>> import nltk
+>>> nltk.download('book')
+
+
+Working with Text Corpora:
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Popular Text Corpora:
+stopwords : Collection of stop words.
+reuters : Collection of news articles.
+cmudict : Collection of CMU Dictionary words.
+movie_reviews : Collection of Movie Reviews.
+np_chat : Collection of chat text.
+names : Collection of names associated with males and females.
+state_union : Collection of state union address.
+wordnet : Collection of all lexical entries.
+words : Collection of words in Wordlist corpus.
+
+
+
+
+>>> from nltk.corpus import genesis
+
+# Various text collections available under genesis text corpus are viewed by fileids method.
+>>> genesis.fileids()
+['english-kjv.txt',
+ 'english-web.txt',
+  ....]
+
+genesis.abspath('english-kjv.txt')
+#FileSystemPathPointer('/home/jovyan/nltk_data/corpora/genesis/english-kjv.txt')
+
+Following example determines the average word length and average sentence
+length of each text collection present in genesis corpus.
+
+>>> for fileid in genesis.fileids():
+...    n_chars = len(genesis.raw(fileid))
+...    n_words = len(genesis.words(fileid))
+...    n_sents = len(genesis.sents(fileid)) #sents() equivalent to sentences 
+...    print(int(n_chars/n_words), int(n_words/n_sents), fileid)
+
+Text Corpus Structure
+	A text corpus is organized into any of the following four structures.
+	Isolated - Holds Individual text collections.
+	Categorized - Each text collection tagged to a category.
+	Overlapping - Each text collection tagged to one or more categories, and
+	Temporal - Each text collection tagged to a period, date, time, etc.
+
+Loading User Specific Corpus
+>>> from nltk.corpus import PlaintextCorpusReader
+>>> corpus_root = '/usr/share/dict'
+>>> wordlists = PlaintextCorpusReader(corpus_root, '.*')
+>>> wordlists.fileids()
+['c1.txt',
+ 'c2.txt',
+ 'c3.txt']
+
+........................
+Conditional Frequency
+........................
+>>> items = ['apple', 'apple', 'kiwi', 'cabbage', 'cabbage', 'potato']
+>>> nltk.FreqDist(items)
+FreqDist({'apple': 2, 'cabbage': 2, 'kiwi': 1, 'potato': 1})
+
+Computing Conditional Frequency:
+.................................
+>>> c_items = [('F','apple'), ('F','apple'), ('F','kiwi'), ('V','cabbage'), ('V','cabbage'), ('V','potato') ]
+>>> cfd = nltk.ConditionalFreqDist(c_items)
+>>> cfd.conditions()
+['V', 'F']
+>>> cfd['V']
+FreqDist({'cabbage': 2, 'potato': 1})
+>>> cfd['F']
+FreqDist({'apple': 2, 'kiwi': 1})
+
+
+#For 'brown' corpus
+import nltk
+from nltk.corpus import brown
+brown.categories()
+# ['adventure', 'belles_lettres', 'editorial', 'fiction', 'government',
+# [''hobbies', 'humor', 'learned', 'lore', 'mystery', 'news', 'religion',
+# [''reviews', 'romance', 'science_fiction']
+
+
+
+>>> cfd = nltk.ConditionalFreqDist([(genre, word) for genre in brown.categories() for word in brown.words(categories=genre) ])
+
+#conditions applied can be viewed as shown below
+>>> cfd.conditions()
+['adventure',
+ 'hobbies',
+ ...]
+
+#Viewing Word Count
+ >>> cfd.tabulate(conditions=['government', 'humor', 'reviews'], samples=['leadership', 'worship', 'hardship'])
+           leadership  worship  hardship 
+government         12        3         2 
+     humor          1        0         0 
+   reviews         14        1         2
+
+#Viewing Cumulative Word Count
+>>> cfd.tabulate(conditions=['government', 'humor', 'reviews'], samples=['leadership', 'worship', 'hardship'], cumulative = True)
+           leadership   worship  hardship 
+government         12       15        17 
+     humor          1        1         1 
+   reviews         14       15        17 
+
+# Accessing Individual frequency distribution:
+>>> news_fd = cfd['news']
+>>> news_fd.most_common(3)
+[('the', 5580), (',', 5188), ('.', 4030)]
+
+Comparing Frequency Distributions
+>>> from nltk.corpus import names
+>>> nt = [(fid.split('.')[0], name[-1]) for fid in names.fileids() for name in names.words(fid) ]
+>>> cfd2 = nltk.ConditionalFreqDist(nt)
+>>> cfd2['female'] > cfd2['male']
+True
+
+>>>>>>>>>>>>>>>>>>>>
+Raw Text Processing
+>>>>>>>>>>>>>>>>>>>>
+
+# Different ways to read the file 
+>>> from urllib import request
+>>> url = "http://www.gutenberg.org/files/2554/2554-0.txt"
+>>> content1 = request.urlopen(url).read()
+
+# Reading a HTML File:
+>>> from bs4 import BeautifulSoup
+>>> soup = BeautifulSoup(html_content, 'html.parser')
+
+inner_body = soup.find_all('div', attrs={'class':'story-body__inner'})
+
+inner_text = [elm.text for elm in inner_body[0].find_all(['h1', 'h2', 'p', 'li']) ]
+ 
+text_content2 = '\n'.join(inner_text)
+
+# Tokenization is a step in which a text is broken down into words and punctuation.
+>>> text_content1 = content1.decode('unicode_escape')  # Converts bytes to unicode
+>>> tokens1 = nltk.word_tokenize(text_content1)
+>>> tokens1[3:8]
+['EBook', 'of', 'Crime', 'and', 'Punishment']
+
+# The following example tokenizes text scrapped from the HTML page.
+>>> tokens2 = nltk.word_tokenize(text_content2)
+>>> tokens2[:5]
+['Smokers', 'need', 'to', 'quit', 'cigarettes']
+>>> len(tokens2)
+751
+
+# Regular expressions can also be utilized to split the text into tokens.
+>>> tokens2_2 = re.findall(r'\w+', text_content2)
+>>> len(tokens2_2)
+668
+
+# nltk contains the function regexp_tokenize, which can be used similarly to re.findall and produce the tokens.
+>>> pattern = r'\w+'
+>>> tokens2_3 = nltk.regexp_tokenize(text_content2, pattern)
+>>> len(tokens2_3)
+668
+
+# Create an object of NLTk text
+>>> input_text2 = nltk.Text(tokens2)
+>>> type(input_text2)
+nltk.text.Text
+
+pattern = r'\w+'
+text_content3 = 'Python is cool!!!'
+tokens3 = nltk.regexp_tokenize(text_content3, pattern)
+
+# Bigrams represent a set of two consecutive words appearing in a text.
+# bigrams function is called on tokenized words, as shown in the following example, to obtain bigrams.
+>>> import nltk
+>>> s = 'Python is an awesome language.'
+>>> tokens = nltk.word_tokenize(s)
+>>> list(nltk.bigrams(tokens))
+[('Python', 'is'),
+ ('is', 'an'),
+ ('an', 'awesome'),
+ ('awesome', 'language'),
+ ('language', '.')]
+
+# Now let's find out three frequently occurring bigrams, present in english-kjv collection of genesis corpus.
+# consider only those bigrams, whose words are having a length greater than 5.
+>>> eng_tokens = genesis.words('english-kjv.txt')
+>>> eng_bigrams = nltk.bigrams(eng_tokens)
+>>> filtered_bigrams = [ (w1, w2) for w1, w2 in eng_bigrams if len(w1) >=5 and len(w2) >= 5 ]
+# following code computes frequency distribution and displays three most frequent bigrams.
+>>> eng_bifreq = nltk.FreqDist(filtered_bigrams)
+>>> eng_bifreq.most_common(3)
+[(('their', 'father'), 19),
+ (('lived', 'after'), 16),
+ (('seven', 'years'), 15)]
+
+# Now let's see an example which determines the two most frequent words occurring after living are determined.
+>>> from nltk.corpus import genesis
+>>> eng_tokens = genesis.words('english-kjv.txt')
+>>> eng_bigrams = nltk.bigrams(eng_tokens)
+>>> eng_cfd = nltk.ConditionalFreqDist(eng_bigrams)
+>>> eng_cfd['living'].most_common(2)
+[('creature', 7), ('thing', 4)]
+
+
+
+
+
+
+
+
+
+
+
+*****************************************************************************************************************
+FP_Hands-on : 1
+******************
+# Below command to get the book locally to your systems
+# import nltk
+# nltk.download('book')
+
+import nltk
+from nltk.book import text6
+
+n = len(text6)
+print(n)
+
+u = len(set(text6))
+print(u)
+
+wc = n//u
+print(wc)
+
+unique_words = set(text6)
+
+ise_ending_words = [word for word in unique_words if word.endswith('ise')]
+print(len(ise_ending_words))
+# 4
+
+contains_z = [word for word in unique_words if('z' in word)]
+print(len(contains_z))
+# 8
+
+contains_pt = [ word for word in unique_words if('pt' in word)]
+print(len(contains_pt))
+# 11
+
+title_words = [word for word in text6 if(word[0].isupper() & word[1:].islower())]
+print(title_words)
+print(len(title_words))
+# print(2672)
+# 2341 or 2672 - this value is the expected one.
+# print(len(set(title_words)))
+# 461
+
+alpha_words = [word for word in text6 if(word.isalpha())]
+text6freq = nltk.FreqDist(alpha_words)
+print(text6freq['ARTHUR'])
+# 225 - these many times this word appeared in the text6
+
+text6freq.most_common(3)
+
+*********************************************
+FP_Hands-on : 2 Accessing text Corpora
+*********************************************
+import nltk
+from nltk.corpus import gutenberg
+gutenberg.fileids()
+
+for fileid in gutenberg.fileids():
+	n_chars = len(gutenberg.raw(fileid))
+	n_words = len(gutenberg.words(fileid))
+	n_unqiue_words = len(set(gutenberg.words(fileid)))
+	n_sents = len(gutenberg.sents(fileid))
+	print(round((n_words/n_unqiue_words),7), fileid) #-- catch here the Word Coverage is confusing
+	# print((n_words/n_unqiue_words), fileid)
+
+aus_words = gutenberg.words('austen-sense.txt')
+
+aus_words_alpha = [word for word in aus_words if(word.isalpha())]
+
+aus_words_gt4_z = [word for word in aus_words if(len(word)>4 and ('z' in word))]
+print(len(aus_words_gt4_z))
+# 51
+
+aus_unique_words = set([word.lower() for word in aus_words_alpha])
+
+from nltk.corpus import words
+
+engcorpus_words = words.words()
+engcorpus_unique_words = set([word.lower() for word in engcorpus_words])
+
+unusual_words = aus_unique_words - engcorpus_unique_words
+print(len(unusual_words))
+# 1601
+
+*********************************************
+FP_Hands-on : 3 Conditional Frequency
+*********************************************
+# pip3 install --upgrade setuptools && pip3 install nltk
+# Python -c "import nltk;nltk.download('book')"
+
+import nltk
+from nltk.corpus import brown
+
+brown_cfd = nltk.ConditionalFreqDist([(genre, word.lower()) for genre in brown.categories() for word in brown.words(categories=genre) ])
+
+#Print the frequency of modal words ['can', 'could', 'may', 'might', 'must',
+#'will'] in text collections associated with genres news, religion and
+#romance, in the form of a table.
+brown_cfd.tabulate(conditions=['news', 'religion', 'romance'], samples=['can', 'could', 'may','might','must','will'])
+
+# import the inaugural corpus.
+# For each inaugural address text available, perform the following:
+# Convert all words into lower case.
+# Determine the number of words(or sentence) starting with america or citizen.
+# Hint: Compute conditional frequency distribution, where the condition is the year in which the inaugural address was delivered and event is either america or citizen. Store the conditional frequency distribution in the variable ac_cfd.
+
+# Print the frequency of words ['america', 'citizen'] in the year [1841, 1993].
+# Hint: Make use of the tabulate method associated with conditional frequency distribution.
+
+from nltk.corpus import inaugural
+
+def amr_citi(word):
+    if(word.startswith('america')):
+        return 'america'
+    if(word.startswith('citizen')):
+        return 'citizen'
+
+words_am_ci = [(fileid[:4], word.lower()) for fileid in inaugural.fileids() for word in inaugural.words(fileid) if((word.lower()).startswith('citizen') | (word.lower()).startswith('america'))]
+
+words_am_ci = [(year, amr_citi(word) )for year, word in words_am_ci]
+
+ac_cfd = nltk.ConditionalFreqDist(words_am_ci)
+
+ac_cfd.tabulate(conditions=['1841','1993'], samples=['america', 'citizen'])
+
+# Alternative for loop to get all the records in a single statement:
+words_ac = [(fileid[:4],amr_citi(word.lower())) for fileid in inaugural.fileids() for word in inaugural.words(fileid) if ((word.lower()).startswith('america') | (word.lower()).startswith('citizen'))]
+
+*********************************************
+FP_Hands-on : 4 | Processing Raw Text
+*********************************************
+!pip install nltk
+import nltk
+nltk.download('book')
+
+!pip install bs4
+
+# Read the html content from the link
+# 'https://en.wikipedia.org/wiki/Python_(programming_language)'. Store the
+# content in the variable html_content.
+# Create a BeautifulSoup object with html_content and html.parser. Store the result in the variable soup.
+# Find the number of reference links present in the soup object. Store the result in the variable n_links.
+# Hint: Make use of the find_all method, and a tags.
+# Print n_links.
+
+from urllib import request
+url = 'https://en.wikipedia.org/wiki/Python_(programming_language)'
+html_content = request.urlopen(url).read()
+
+from bs4 import BeautifulSoup as bs
+
+soup = bs(html_content,'html.parser')
+
+n_links = len(soup.find_all('a'))
+
+print(n_links)
+# 1637
+
+table = soup.find('table',attrs={'class':'wikitable'})
+rows = table.find_all('tr')
+rows = rows[1:]
+
+col = [row.find_all('td')[0].get_text().strip() for row in rows]
+
+*********************************************
+FP_Hands-on : 5 | 
+*********************************************
+
+
+
+
+
+
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+									#################################################################
+									# https://www.datacamp.com/community/tutorials/categorical-data #
+									#################################################################
+
+import pandas as pd
+df_flights = pd.read_csv('https://raw.githubusercontent.com/ismayc/pnwflights14/master/data/flights.csv')
+
+#In a ntshell to check if there are any nulls in there in any record
+# .values - returns an array of True and False hence might give some performance issue.
+# .sum() - how sum() would behave with bool of array? think !!! HOw it would add the items which are boolean
+#  
+df_flights.isnull().values.sum()
+
+# List out the num of NULLs in each columns
+df_flights.isnull().sum()
+
+# if above returns any value that means those many elements i.e. individual elements of dataframe are NULL
+
+#Check the columns which contain the NULL Values.
+for col in df_flights.columns:
+    if(df_flights[col].isnull().values.sum() != 0):
+        print(col , " contains NULL Values")
+
+#Find out how many values are NULL, in a columns. Below would return an integer and that many elements are NULL
+df_flights['dep_delay'].isnull().values.sum()
+
+# Frequency distribution of each category in the feature i.e.Counts how many
+# time the different values that is there in the columns appears.
+df_flights['month'].value_counts()
+
+# Below gives the count of distinct category
+df_flights['month'].value_counts().count()
+
+#Label Encoder from sklearn.preprocessing
+from sklearn.preprocessing import LabelEncoder
+
+lb_make = LabelEncoder()
+
+cat_df_flights = df_flights.copy()
+
+cat_df_flights['carrier'] = lb_make.fit_transform(df_flights['carrier'])
+
+#One HOT Encoding:
+# One-Hot encoding
+# The basic strategy is to convert each category value into a new column and
+# assign a 1 or 0 (True/False) value to the column. This has the benefit of
+# not weighting a value improperly.
+
+
+
+# While one-hot encoding solves the problem of unequal weights given to
+# categories within a feature, it is NOT VERY USEFUL when there are MANY
+# CATEGORIES, as that will result in formation of as many new columns, which
+# can result in the curse of dimensionality. The concept of the “curse of
+# dimensionality” discusses that in high-dimensional spaces some things just
+# stop working properly.
+
+
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Machine Learning Using Scikit-Learn | 4 | Ensemble Methods 
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+>. Ensemble methods combine predictions of other learning algorithms, to improve the generalization.
+>.   
+>.   
+>.   
+>.   
+
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+
+import sklearn.datasets as datasets
+from sklearn.model_selection import train_test_split
+import numpy as np
+import pandas as pd
+
+np.random.seed(100)
+
+boston = datasets.load_boston()
+X_train, X_test, Y_train, Y_test = train_test_split(boston.data, boston.target, random_state=30)
+
+print(X_train.shape)
+print(X_test.shape)
+
+rf_reg = RandomForestClassifier()
+rf_reg = rf_reg.fit(X_train, Y_train)
+
+print('Accuracy of Train Data :', rf_reg.score(X_train,Y_train))
+print('Accuracy of Test Data :', rf_reg.score(X_test,Y_test))
+
+rf_reg = RandomForestRegressor()
+rf_reg = rf_reg.fit(X_train, Y_train)
+
+print('Accuracy of Train Data :', rf_reg.score(X_train,Y_train))
+print('Accuracy of Test Data :', rf_reg.score(X_test,Y_test))
+
+print(rf_reg.predict(X_test[[0,1]]))
+# print(rf_reg.predict(X_test[0,:2]))
+
+highest_accuracy=0
+maxdepth=0
+n_estimator=0
+
+for n in range(3,6):
+# print(n)
+  for n_estit in [50,100,200]:
+    rf_reg = RandomForestRegressor(max_depth=n, n_estimators=n_estit)
+    rf_reg = rf_reg.fit(X_train, Y_train)
+    testDataAcc = rf_reg.score(X_test,Y_test)
+    # print('Accuracy of Test Data :', testDataAcc)
+    if(testDataAcc > highest_accuracy):
+      highest_accuracy = testDataAcc
+      maxdepth = rf_reg.get_params()['max_depth']
+      n_estimator = rf_reg.get_params()['n_estimators']
+
+print(highest_accuracy)
+print(tuple([maxdepth,n_estimator]))
+
+>>>>>>>>>>>>>>>>>>>>>>>
+Support Vector Machine:
+>>>>>>>>>>>>>>>>>>>>>>>
+>. Support Vector Machines (SVMs) separates data points based on decision
+planes, which separates objects belonging to different classes in a higher
+dimensional space.
+
+>. SVM algorithm uses the best suitable kernel, which is capable of separating data points into two or more classes.
+	Commonly used kernels are:
+	> linear
+	> polynomial
+	> rbf
+	> sigmoid
+
+>. scikit-learn provides the following three utilities for performing Support Vector Classification.
+	> SVC,
+	> NuSVC: Same as SVC but uses a parameter to control the number of support vectors.
+	> LinearSVC: Similar to SVC with parameter kernel taking linear value.
+
+
+>. Demo:
+
+# model overfits the training data.
+from sklearn.svm import SVC
+
+svm_classifier = SVC()
+
+svm_classifier = svm_classifier.fit(X_train, Y_train) 
+
+print('Accuracy of Train Data :', svm_classifier.score(X_train,Y_train))
+
+print('Accuracy of Test Data :', svm_classifier.score(X_test,Y_test))
+
+# Improved model from above
+
+import sklearn.preprocessing as preprocessing
+
+standardizer = preprocessing.StandardScaler()
+standardizer = standardizer.fit(cancer.data)
+cancer_standardized = standardizer.transform(cancer.data)
+
+svm_classifier = SVC()
+
+svm_classifier = svm_classifier.fit(X_train, Y_train) 
+
+print('Accuracy of Train Data :', svm_classifier.score(X_train,Y_train))
+
+print('Accuracy of Test Data :', svm_classifier.score(X_test,Y_test))
+
+
+from sklearn import metrics
+
+Y_pred = svm_classifier.predict(X_test)
+
+print('Classification report : \n',metrics.classification_report(Y_test, Y_pred))
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Machine Learning Using Scikit-Learn | 5 | SVM
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+import sklearn.svm
+from sklearn.svm import SVC
+import sklearn.datasets as datasets
+from sklearn.model_selection import train_test_split
+import sklearn.preprocessing as preprocessing
+
+
+digits = datasets.load_digits()
+X_train, X_test, Y_train, Y_test = train_test_split(digits.data, digits.target, random_state=30)
+
+print(X_train.shape)
+print(X_test.shape)
+
+svm_clf = SVC()
+
+# standardizer = preprocessing.StandardScaler()
+# standardizer = standardizer.fit(digits.data)
+# digits_standardized = standardizer.transform(digits.data)
+
+X_train, X_test_1, Y_train, Y_test_1 = train_test_split(digits_standardized, digits.target, random_state=30)
+
+
+svm_clf = svm_clf.fit(X_train, Y_train)
+
+# print('Accuracy of Train Data :', svm_clf.score(X_train,Y_train))
+
+# print('Accuracy of Test Data :', svm_clf.score(X_test_1,Y_test_1))
+print(svm_clf.score(X_test,Y_test))
+
+from sklearn import metrics
+
+Y_pred = svm_clf.predict(X_test)
+
+print('Classification report : \n',metrics.classification_report(Y_test, Y_pred))
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+from sklearn.cluster import KMeans
+
+kmeans_cluster = KMeans(n_clusters=2)
+
+kmeans_cluster = kmeans_cluster.fit(X_train)
+
+kmeans_cluster.predict(X_test)
+
+from sklearn import metrics
+
+print(metrics.homogeneity_score(kmeans_cluster.predict(X_test), Y_test))
+
+print(metrics.completeness_score(kmeans_cluster.predict(X_test), Y_test))
+
+print(metrics.v_measure_score(kmeans_cluster.predict(X_test), Y_test))
+
+print(metrics.adjusted_rand_score(kmeans_cluster.predict(X_test), Y_test))
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Machine Learning Using Scikit-Learn | 6 | Clustering
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+import sklearn.svm
+
+import sklearn.datasets as datasets
+import sklearn.cluster as cluster
+import sklearn.metrics as metrics
+
+from sklearn.model_selection import train_test_split
+
+import numpy as np
+import pandas as pd
+
+# from sklearn.cluster import KMeans
+
+iris = datasets.load_iris()
+
+km_cls = cluster.KMeans(n_clusters=3)
+
+X_train, X_test, Y_train, Y_test = train_test_split(iris.data, iris.target, random_state=30)
+
+km_cls = km_cls.fit(X_train)
+
+# km_cls.predict(X_test)
+
+print(metrics.homogeneity_score(km_cls.predict(X_test), Y_test))
+
+#in the exercise it's not mentioned
+agg_cls = cluster.AgglomerativeClustering(n_clusters=3,affinity='euclidean', linkage='average')
+
+agg_cls = agg_cls.fit(X_train)
+
+print(metrics.homogeneity_score(agg_cls.fit_predict(X_test), Y_test))
+
+
+af_cls = cluster.AffinityPropagation()
+
+#Below code took lots of time
+af_cls = af_cls.fit(iris.data)
+
+# print(metrics.homogeneity_score(af_cls.fit_predict(X_test), Y_test))
+print(metrics.homogeneity_score(af_cls.predict(X_test), Y_test))
+
+
+
+
+
+
+
+
+
+
+
+
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+Multiple LR:
+^^^^^^^^^^^^
+>>  import pandas as pd
+	import statsmodels.framework.api as smf
+	import statsmodels.framework as sm
+
+	price = [160,180,200,220,240,260,280]
+	sale = [126,103,82,75,82,40,20]
+	cars = [0,9,19,5,25,1,20]
+	priceDF = pd.DataFrame(price, columns=list('x'))
+	saleDF = pd.DataFrame(sale, columns=list('y'))
+	carsDf = pd.DataFrame(cars, columns=list('z'))
+	houseDf = pd.concat([priceDF,saleDF,carsDf],axis=1)
+
+	X = houseDf.drop(['y'], axis=1)
+	y = houseDf.y
+	Xc = sm.add_constant(X)
+	linear_regression = sm.OLS(y,Xc)
+	fitted_model = linear_regression.fit()
+	fitted_model.summary()
+
+	- This value also indicates how significant a variable is to a model.
+	- The smaller the value, the more significant a given variable is to the model.
+	- it is better to remove variables with higher values of `P(>|t|)`
+
+
+
+>>  
+>>  
+>>  
+>>  
+>>  
+
+
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+PySpark:
+	|- pyspark <--| 
+		>>> dir()
+		SparkSession.builder()
+			df = sqlContext.range(0, 10).withColumn('r1', rand(seed=10)).withColumn('r2', rand(seed=20))
+			df.stat.cov('r1', 'r2')
+			df.stat.corr('r1', 'r2')
+			df.select("r1", "r2").write.save("result.txt")
+		
+	|- Stats and Math Func:
+		|- Random Data generation:
+			from pyspark.sql.functions import rand, randn
+			df = sqlContext.range(0, 7)
+			df.show()
+#			uniform distribution and normal distribution generate two more columns
+			df.select("id", rand(seed=10).alias("uniform"), randn(seed=27).alias("normal")).show()
+
+#			get some sense of what it looks like.
+			df.describe('uniform', 'normal').show()
+			
+#			some more statistical functions 
+			from pyspark.sql.functions import mean, min, max
+			df.select([mean('uniform'), min('uniform'), max('uniform')]).show()
+			
+#			Co-Variance:
+#			> Positive value indicates a trend in increase when the other increases.
+#			> Negative value indicates a trend in decrease when the other increases.
+			co-variance of two columns of a DataFrame:
+			from pyspark.sql.functions import rand
+			df = sqlContext.range(0, 10).withColumn('rand1', rand(seed=10)).withColumn('rand2', rand(seed=27))
+			df.stat.cov('rand1', 'rand2')
+			
+			
+			
+#			Correlation provides the statistical dependence of two random variables.
+			df.stat.corr('rand1', 'rand2')
+			
+			Cross Tabulation provides a frequency distribution table for a given set of variables.
+			# Create a DataFrame with two columns (name, item)
+			names = ["Alice", "Bob", "Mike"]
+			items = ["milk", "bread", "butter", "apples", "oranges"]
+			df = sqlContext.createDataFrame([(names[i % 3], items[i % 5]) for i in range(100)], ["name", "item"])
+			df.stat.crosstab("name", "item").show()
+			
+			
+		|- Spark SQl:
+			> We can also pass SQL queries directly to any DataFrame. For that, we need to create a table from the DataFrame using the registerTempTable method. After that use sqlContext.sql() to pass the SQL queries.
+			
+			> 
+
+
+	|- Apache Hive:
+		|- The Apache Hive data warehouse software allows reading, writing, and managing large datasets residing in distributed storage and queried using SQL syntax.
+			> Access to files stored either directly in Apache HDFS or in other data storage systems such as Apache HBase.
+			> Query execution via Apache Tez,Apache Spark, or MapReduce	
+			> 
+			> 
+		
+		|- When working with Hive, one must instantiate SparkSession with Hive support, including connectivity to a persistent Hive metastore, support for Hive serdes, and Hive user-defined functions
+		
+		|- How To Enable Hive Support:
+			from os.path import expanduser, join, abspath
+
+			from pyspark.sql import SparkSession
+			from pyspark.sql import Row
+			
+			#warehouse_location points to the default location for managed databases and tables
+			
+			warehouse_location = abspath('spark-warehouse')
+			
+			spark = SparkSession \
+				.builder \
+				.appName("Python Spark SQL Hive integration example") \
+				.config("spark.sql.warehouse.dir", warehouse_location) \
+				.enableHiveSupport() \
+				.getOrCreate()
+		
+		|- 
+		
+
+
+	|- Handon On - Statistical and Mathematical Functions Hands-on:
+		spark = SparkSession \
+					.builder \
+					.appName("Python Spark SQL basic example") \
+					.config("spark.some.config.option", "some-value") \
+					.getOrCreate()
+		SparkSession.builder()
+			df = sqlContext.range(0, 10).withColumn('r1', rand(seed=10)).withColumn('r2', rand(seed=20))
+			df.stat.cov('r1', 'r2')
+			df.stat.corr('r1', 'r2')
+			df.select("r1", "r2").write.save("result.txt")
+	
+	|- create DF from JSOn file:
+		{"name":"Mathew","age":"22","stream":"JAVA"}
+		{"name":"Peter","age":"21","stream":"JAVA"}
+		{"name":"Jatin","age":"23","stream":"DOT NET"}
+		{"name":"Rohit","age":"24","stream":"DOT NET"}
+		{"name":"Sumon","age":"22","stream":"JAVA"}
+		spark = SparkSession \
+					.builder \
+					.appName("Create DF from JSON File") \
+					.config("spark.some.config.option", "some-value") \
+					.getOrCreate()
+		df = spark.read.load("./ilp.json", format="json")
+		df.write.parquet('./result.parquet')
+		df.filter(df['stream'] == 'JAVA').select('name').show()
+
+	
+	|- 
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+FP_Pandas:
+**********
+	>- 3 fundamental data structure:
+		+- Series : is a 1-D array, holding data values of a single variable, captured from multiple observations.
+			>> b in s wala questions.
+			>> what would be the output : 
+				s = pd.Series([89.2, 76.4, 98.2, 75.9], index=list('abcd')) 
+				print(s[['c', 'a']])
+			>> 
+			>> 
+			>> 
+			>> 
+			
+		+- DataFrame : 
+			>> can't be used to create the Dataframe.
+			>> What would be the output and the shape of the df :
+				data = [{'a': 1, 'b': 2}, {'a': 5, 'b': 10, 'c': 20}]
+				df = pd.DataFrame(data)
+			
+			>> del df_A['Student_height'] - will delete the column from the Dataframe.
+			
+			>> How to slice and dice the dataframe? without using loc, iloc. range and single use of []
+			>> dfA - a sample dataframe - its shape i.e. (row,col) - is given by dfA.shape - attribute, it's not a func.
+			>> dfA.shape returns tuple. hence 1st element i.e. dfA.shape[0] represents toatl no of rows and 2nd column represents total no of colmns - i.e. dfA.shape[1].
+			>> Note that .iloc returns a Pandas Series when one row is selected, and a Pandas DataFrame when multiple rows are selected, 
+			>> loc method:
+				print(type(df.iloc[100])) -- Series
+				print(type(df.iloc[[100]])) -- DataFrame
+				print(type(df.iloc[1:2])) -- DataFrame
+				print(type(df.iloc[100])) -- 
+			>> 
+			
+		+- Panel (Deprecated) : A Panel holds two or more Data Frames together as a single unit.
+			>> e.g. Height and Weight of all students, belonging to 3 Classes 'A', 'B', and 'C'.
+			>> e.g. Daily Rainfall received and Average Temperatures of 3 locations 'X', 'Y', and 'Z' captured in the year 2017.
+			>> Major axis(\|/), Minor axis(-->) and Location axis(/).
+			>> 
+			>> 
+	
+	>- read_csv() - mthd parameter - index_col - can take multiple columns 
+	
+	>- Indexing :
+		>> df.index = [] - can be used to set the index.
+		>> 
+		>> Hierarchial Indexing :
+			>> 
+			>> 
+			>> 
+	
+	>- 
+
+<=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+Py App Progming :
+*****************
+Context Manager:
+	>> with open('sample.txt', 'w') as fp:
+		content = fp.read()
+	
+	>> 
+	
+	>> 
+	
+	>> 
+
+
+
+<=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+Kaggle Pd :
+*****************
+# Two ways to create same tables structure, but look for the difference in the 2nd statement.
+fruit_sales = pd.DataFrame([[35,21],[41,34]],columns=['Apples','Bananas'],index=['2017 Sales','2018 Sales'])
+fruit_sales = pd.DataFrame({"Apples":[35,41],"Bananas":[21,34]},index=['2017 Sales','2018 Sales'])
+
+#dataframe.to_csv('./file_name.csv')
+animals.to_csv('./cows_and_goats.csv')
+
+#Different ways to select a column:
+desc = reviews.loc[:,'description']
+desc = reviews["description"]
+desc = reviews.description
+
+#Get the 1st 10 rows of a column.
+desc = reviews.description[:10]
+first_descriptions = reviews["description"][:10]
+
+#Selecting the 1st entry from the column
+reviews.description[0]
+reviews.description.iloc[0]
+reviews.description.loc[0]
+
+#Get the first ROW:
+first_row = reviews.iloc[0]
+first_row = reviews.loc[0]
+
+#Select a potion of the data from the actual dataframe i.e. few rows and few columns
+ind=[0,1,10,100]
+cols=['country', 'province', 'region_1','region_2']
+
+df = reviews.iloc[ind][cols]
+df = reviews.loc[ind,cols]
+
+# 7. Difference between loc() and iloc() - IMP
+#  `iloc` uses the Python stdlib indexing scheme, where the first element of the range is included and the last one excluded. 
+# `loc`, meanwhile, indexes inclusively. 
+#
+#> This is particularly confusing when the DataFrame index is a simple numerical list, e.g. `0,...,1000`. In this case `df.iloc[0:1000]` will return 1000 entries, while `df.loc[0:1000]` return 1001 of them! To get 1000 elements using `loc`, you will need to go one lower and ask for `df.iloc[0:999]`.
+
+df = reviews.loc[:99,['country','variety']]
+df = reviews.iloc[:100][['country','variety']]
+
+cols = ['country', 'variety']
+df = reviews.loc[:99, cols]
+
+or
+
+cols_idx = [0, 11]
+df = reviews.iloc[:100, cols_idx]
+
+# records where country='Italy'
+italian_wines = reviews[reviews.country == 'Italy']
+
+#Things to NOTE here is that if the '==' exp are not within () then error.
+# where country either 'Aust' or 'NZ' AND 'points' shld be >=95
+top_oceania_wines = reviews.loc[( ( reviews.country == 'Australia') | (reviews.country == 'New Zealand' ) ) & ( reviews.points>=95 ) ]
+
+top_oceania_wines = reviews.loc[( reviews.country.isin ('Australia', 'New Zealand' ) ) & ( reviews.points>=95 ) ]
+
+# Stats 
+#
+median_points = reviews.points.median()
+
+#What are the different values of a column
+countries = reviews.country.unique()
+
+## 3. How often does each country appear in the dataset? Create a Series `reviews_per_country` mapping countries to the count of reviews of wines from that country.
+reviews_per_country = reviews.country.value_counts()
+
+#`centered_price` containing a version of the `price` column with the mean price subtracted.
+centered_price = reviews.price - reviews.price.mean()
+
+# based on Arithmetic condition fetch the id with max value
+bg_idmx = (reviews.points/reviews.price).idxmax()
+bargain_wine = reviews.loc[bg_idmx,'title']
+
+
+
+<=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+Summary Functions and Maps : Part 2:
+*************************************
+
+
+
+<=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+Data Merging : Part 2:
+**********************
+import numpy as np
+import pandas as pd
+
+
+nameid = pd.Series(range(101,111))
+
+name = pd.Series(['person'+str(i) for i in range(1,11)])
+
+master = pd.DataFrame({"nameid":nameid,"name":name})
+
+transaction = pd.DataFrame({'nameid':[108, 108, 108,103], 'product':['iPhone', 'Nokia', 'Micromax', 'Vivo']})
+
+mdf = pd.merge(master,transaction)
+
+print(mdf)
+
+
+=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+Data Merging : https://pandas.pydata.org/pandas-docs/stable/user_guide/merging.html
+**************
+import numpy as np
+import pandas as pd
+
+heights_A = pd.Series([176.2, 158.4, 167.6, 156.2,161.4], index=['s1', 's2', 's3', 's4', 's5'])
+
+weights_A = pd.Series([85.1, 90.2, 76.8, 80.4, 78.9],index=['s1', 's2', 's3', 's4', 's5'])
+
+df_A = pd.DataFrame({"Student_height":heights_A,"Student_weight":weights_A})
+
+df_A['Gender'] = ['M', 'F', 'M', 'M', 'F']
+
+s = pd.Series([165.4, 82.7, 'F'], index=['Student_height', 'Student_weight', 'Gender'],name='s6')
+
+df_AA = df_A.append(s)
+
+print(df_AA)
+
+np.random.seed(100)
+
+heights_B = pd.Series(25.0*np.random.randn(5) + 170.0, index=['s1', 's2', 's3', 's4', 's5'])
+
+np.random.seed(100)
+
+weights_B = pd.Series(12.0*np.random.randn(5) + 75.0, index=['s1', 's2', 's3', 's4', 's5'])
+
+df_B = pd.DataFrame({"Student_height":heights_B,"Student_weight":weights_B},index=['s1', 's2', 's3', 's4', 's5'])
+
+df_B.index=['s7', 's8', 's9', 's10', 's11']
+
+df_B['Gender'] = ['F', 'M', 'F', 'F', 'M']
+
+df = pd.concat([df_AA,df_B], axis=0, sort=False,join='outer')
+
+print(df)
+
+=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+Data Aggreagation :
+*******************
+df = pd.DataFrame({'temp':pd.Series(28 + 10*np.random.randn(10)), 'rain':pd.Series(100 + 50*np.random.randn(10)), 'location':list('AAAAABBBBB')})
+df.head(2)
+
+import pandas as pd
+import numpy as np
+
+heights_A = pd.Series([176.2, 158.4, 167.6, 156.2,161.4], index=['s1', 's2', 's3', 's4', 's5'])
+
+weights_A = pd.Series([85.1, 90.2, 76.8, 80.4, 78.9],index=['s1', 's2', 's3', 's4', 's5'])
+
+df_A = pd.DataFrame({"Student_height":heights_A,"Student_weight":weights_A})
+
+df_A_filter1 = df_A.loc[df_A['Student_height']>160].loc[df_A['Student_weight']<80]
+
+print(df_A_filter1)
+
+df_A_filter2 = df_A.loc[df_A.index == 's5']
+
+print(df_A_filter2)
+
+df_A['Gender'] = ['M', 'F', 'M', 'M', 'F']
+
+df_groups = df_A.groupby('Gender')
+
+df_groups.mean()
+
+****** 
+QnA :
+****** 
+1. Consider a data frame df with 10 rows and index [ 'r1', 'r2', 'r3', 'row4', 'row5', 'row6', 'r7', 'r8', 'r9', 'row10']. What does the aggregate method shown in below code do?
+	g = df.groupby(df.index.str.len())
+	g.aggregate({'A':len, 'B':np.sum})
+
+2. Consider a data frame df with columns ['A', 'B', 'C', 'D'] and rows ['r1', 'r2', 'r3']. Which of the following expression filters the rows whose column B values are greater than 45?
+
+3. Consider a data frame df with 10 rows and index [ 'r1', 'r2', 'r3', 'row4', 'row5', 'row6', 'r7', 'r8', 'r9', 'row10']. What does the expression g = df.groupby(df.index.str.len()) do?
+
+4. What does the expression df.iloc[:, lambda x : [0,3]] do? Consider a data frame df with columns ['A', 'B', 'C', 'D'] and rows ['r1', 'r2', 'r3'].
+
+
+
+
+
+
+***************
+Data Cleaning :
+***************
+import numpy as np
+import pandas as pd
+
+heights_A = pd.Series([176.2, 158.4, 167.6, 156.2,161.4], index=['s1', 's2', 's3', 's4', 's5'])
+
+weights_A = pd.Series([85.1, 90.2, 76.8, 80.4, 78.9],index=['s1', 's2', 's3', 's4', 's5'])
+
+df_A = pd.DataFrame({"Student_height":heights_A,"Student_weight":weights_A})
+
+df_A.loc['s3']=np.NaN
+
+df_A.loc['s5']=np.NaN
+
+df_A2 = df_A.dropna()
+
+print(df_A2)
+
+<=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+import numpy as np
+import pandas as pd
+
+dates  = pd.date_range('09/01/2017',periods=15,freq='D')
+#3rd element
+dates[2]
+
+datelist = ['14-Sep-2017', '9-Sep-2017']
+
+dates_to_be_searched = pd.to_datetime(datelist,format='%d-%b-%Y')
+
+print(dates_to_be_searched)
+
+#Check if the elements of 'dates_to_be_searched' are present in DateTimeIndex, 'dates', created above.
+print(dates_to_be_searched.isin(dates))
+
+for dt in dates_to_be_searched:
+    if dt in dates:
+        print(':Date :{} Found'.format(dt))
+
+
+arraylist = [['classA']*5 + ['classB']*5, ['s1', 's2', 's3','s4', 's5']*2]
+
+mi_index = pd.MultiIndex.from_arrays(arraylist)
+
+print(mi_index.levels)
+
+*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*
+import numpy as np
+import pandas as pd
+
+heights_A = pd.Series([176.2, 158.4, 167.6, 156.2,161.4],index=['s1', 's2', 's3', 's4', 's5'])
+
+weights_A = pd.Series([85.1, 90.2, 76.8, 80.4,78.9],index=['s1', 's2', 's3', 's4', 's5'])
+
+df_A = pd.DataFrame({"Student_height":heights_A,"Student_weight":weights_A})
+
+df_A.to_csv('classA.csv')
+
+df_B = pd.read_csv('./classA.csv')
+#print(df_B)
+
+df_A3 = pd.read_csv('./classA.csv',index_col=0)
+print(df_A3)
+
+heights_B = pd.Series(25.0 * np.random.randn(5) + 170.0,index=['s1', 's2', 's3', 's4', 's5'])
+
+np.random.seed(100)
+
+weights_B = pd.Series(12.0 * np.random.randn(5) + 75.0,index=['s1', 's2', 's3', 's4', 's5'])
+
+df_B = pd.DataFrame({"Student_height":heights_B,"Student_weight":weights_B})
+
+df_B.to_csv('./classB.csv',index=False)
+
+df_B2 = pd.read_csv('./classB.csv')
+
+print(df_B2)
+
+df_B3 = pd.read_csv('./classB.csv',header=None)
+
+print(df_B3)
+
+df_B4 = pd.read_csv('./classB.csv',header=None,skiprows=2)
+
+print(df_B4)
+
+
+<=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+
+import pandas as pd
+import numpy as np
+
+heights_A = pd.Series([176.2, 158.4, 167.6, 156.2, 161.4], index=['s1','s2','s3','s4','s5'])
+#print(heights_A.shape)
+
+weights_A = pd.Series([85.1, 90.2, 76.8, 80.4,78.9], index=['s1','s2','s3','s4','s5'])
+#print(weights_A.dtype)
+
+df_A = pd.DataFrame({"Student_height":heights_A, "Student_weight":weights_A},index=['s1','s2','s3','s4','s5'])
+
+#print(df_A)
+print(df_A.shape)
+
+np.random.seed(100)
+
+#heights_B = pd.Series(np.random.normal(loc=170, scale=25.0, size=5),index=['s1','s2','s3','s4','s5'])
+heights_B = pd.Series(25.0 * np.random.randn(5) + 170.0,index=['s1','s2','s3','s4','s5'])
+
+#weights_B = pd.Series(np.random.normal(loc=75.0, scale=12.0, size=5), index=['s1','s2','s3','s4','s5'])
+weights_B = pd.Series(12.0 * np.random.randn(5) + 75.0, index=['s1','s2','s3','s4','s5'])
+print(np.mean(heights_B))
+
+df_B  = pd.DataFrame({"Student_height":heights_B, "Student_weight":weights_B},index=['s1','s2','s3','s4','s5'])
+print(df_B.columns)
+
+d = {"ClassA":df_A, "ClassB":df_B}
+
+p = pd.Panel(d) //Panel() - is deprecated now.
+print(p.shape)
+
+*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*
+import pandas as pd
+import numpy as np
+
+heights_A = pd.Series([176.2, 158.4, 167.6, 156.2, 161.4], index=['s1','s2','s3','s4','s5'])
+print(heights_A[1])
+
+print(heights_A[1:heights_A.size-1])
+
+weights_A = pd.Series([85.1, 90.2, 76.8, 80.4,78.9], index=['s1','s2','s3','s4','s5'])
+
+df_A = pd.DataFrame({"Student_height":heights_A, "Student_weight":weights_A},index=['s1','s2','s3','s4','s5'])
+
+height = df_A['Student_height']
+
+type(_)
+
+df_s1s2 = df_A.loc[['s1','s2']]
+
+print(df_s1s2)
+
+df_s2s5s1 = df_A.loc[['s2','s5','s1']]
+print(df_s2s5s1)
+
+df_s1s4 = df_A.loc[['s1','s4']]
+print(df_s1s4)
+
+*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*
+
+<=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=><=>
+
+Create a panel p, containing the previously created two dataframes df_A and df_B.
+
+Label the first dataframe as ClassA, and second as ClassB.
+
+Determine the shape of panel p and display it.
+
+Create a dataframe df_B containing the height and weight of students s1, s2, s3, s4 and s5 belonging to class B.
+
+Label the columns as Student_height and Student_weight respectively.
+
+Display the column names of df_B.
+
+heights_B = np.random()
+
+1-D numpy array of 5 elements derived from the normal distribution of mean 170.0 and standard deviation 25.0.
+
+
+weights_B = np.random()
+ mean 75.0 and standard deviation 12.0
+ 
+ 
+ Print the mean of series heights_B
+ 
+ x = np.random.normal(loc=my_mean, scale=my_std, size=1000)
+ 
+ 
+ my_std * np.random.randn(1000) + my_mean
+ 25.0 * np.random.randn(5) + 170.0
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+
+Digital : Intuitive Visualization Basics_FP
+Digital : Basics of Statistics and Probability_FP
+Digital : Data Mining Methods Basics_FP - done
+Digital : R Basics_FP - done.
+ 
+Digital : Machine Learning Axioms_FP
+Digital : Machine Learning Exploring the Model_FP - done.
+
+._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._._
+
+._ Dropout Regularization :
+	>- to prevent overfitting.
+	>- 
+	>- 
+	
+
+tf.Variable(dtype=tf.float64,initial_value=(tf.random_normal_initializer))
+
+def initialize_parameters_deep(layer_dims):
+    tf.set_random_seed(1)
+    L = len(layer_dims)
+    parameters = {}
+    for l in range(1,L):
+        parameters['W' + str(l)] = tf.get_variable(dtype=tf.float64,initializer=tf.glorot_normal_initializer([layer_dims[l],layer_dims[l-1]]))
+                                   
+        parameters['b' + str(l)] = tf.get_variable(dtype=tf.float64,initializer=tf.zeros([layer_dims[l],1]))
+    
+    return parameters
+
+def l_layer_forwardProp(A_0, parameters, drop_out = False):
+    A = A_0
+    L = len(parameters)//2                               #number of layers
+    for l in range(1,L):                                 
+        A_prev = A
+        ###Start code
+        A = linear_forward_prop(A_prev, parameters['W' + str(L)], parameters['b' + str(L)], "sigmoid" ) #call linear_forward_prop to return the output from current layer
+        ###End code
+        if drop_out:                                    #check if dropout == True, if true apply dropout to current layer's output.
+            
+            A = linear_forward_prop(tf.nn.dropout(A_prev,keep_prob=0.8), parameters['W' + str(L)], parameters['b' + str(L)], "sigmoid" )                                       # call tensoflow's droupout function to deactivate output A, set keep_prob = 0.8
+    A = linear_forward_prop(A_prev, parameters['W' + str(L)], parameters['b' + str(L)], "sigmoid" )   # return output from final layer.
+    return A
+
+def final_cost(Z_final, Y , parameters, regularization = False, lambd = 0):
+    #define original cost
+    cost = tf.nn.sigmoid_cross_entropy_with_logits(logits=Z_final,labels=Y)
+    if regularization:
+        #initialize regularization term to zero
+        reg_term = 0                               
+        L = len(parameters)//2                     
+        for l in range(1,L+1):
+            #use tensorflow's l2 regularization to calculate regularization term for each later and
+            #sum it up to previous layer's regularization term
+            
+            ###Start code
+            reg_term += tf.nn.l2_loss(parameters['W'+str(l)])
+        
+        #multiply lambd/2 to reg_term to add it to original cost
+        cost += (lambd/2)*reg_term
+        ##End code
+    return tf.reduce_mean(cost)
+
+
+def deep_net(X_train,Y_train, layer_dims, learning_rate, num_iter, regularization = False, lambd = 0, drop_out = False):
+    tf.reset_default_graph()                
+    num_features = layer_dims[0]
+    ###Start code
+    A_0, Y = placeholders(num_features) #call placeholder function to initialize placeholders A_0 and Y
+    parameters =initialize_parameters_deep(layer_dims) #Initialse Weights and bias using initialize_parameters_deep() with layer_dims as parameters  
+    Z_final =  l_layer_forwardProp(A_0, parameters, drop_out = False)#call the function l_layer_forwardProp() to define the final output
+    
+    # call final_cost() function to return the cost that has to be minimized during gradient descent
+    cost =final_cost(Z_final, Y , parameters, regularization = False, lambd = 0) 
+    
+    #call tensorflow's gradient descent optimizer function with minimize cost  
+    train_net = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)  
+    #End code
+    init = tf.global_variables_initializer()
+    costs = []
+    with tf.Session() as sess:
+        sess.run(init)
+        for i in range(num_iter):
+            _,c = sess.run([train_net, cost], feed_dict={A_0: X_train, Y: Y_train})
+            if i % 100 == 0:
+                costs.append(c)
+            if i % 1000 == 0:
+                print(c)
+        with open('output.txt', 'w') as file:
+            file.write("cost = %f "  % costs[-1])
+        plt.ylim(min(costs)+0.1 ,max(costs), 4, 0.01)
+        plt.xlabel("epoches per 100")
+        plt.ylabel("cost")
+        plt.plot(costs)
+        plt.show()
+        params = sess.run(parameters)
+    return params

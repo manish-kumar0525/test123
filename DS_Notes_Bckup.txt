@@ -1,0 +1,74 @@
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+Fresco Play:
+	._ RBM :
+		._ 
+		._ 
+		._ 
+	._ 
+	._ 
+	._ 
+	._ 
+	._ 
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+Matplotlib:
+	._ Python >- Numpy >- SciPy >- Matplotlib >- Pandas(Pandel Data)
+	._ pyplot --> figiure -> one or more axes/subplot objects are created -> These axes objects are further used for doing many plotting actions.
+	._ If we pass a list of values to the plot function then Plot takes these as Y values. The indices of the list are automatically taken as the X values.
+		>- plt.plot([-1, -4.5, 16, 23]) - the plot is continuous graph though the input is discrete.
+		>- Need to provide a format string to change the format e.g. plt.plot([-1, -4.5, 16, 23], "ob").
+		format parameter - two character long - 1st character decides - 'the markers e.g. - line style or discrete value style.' and the other parameter decides color of the graph. The order of these could be reversed. Default value of format parameter is - 'b- == a solid blue line'.
+
+	._ The command %matplotlib inline makes only sense, if you work with Ipython Notebook. It makes sure, that the graphs will be depicted inside of the document and not as independent windows.
+	._ 
+	._ 
+	._ 
+	._ 
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+1. Measuring Accuracy Using Cross-Validation
+2. Stratified Sampling :
+	._ the population is divided into homogeneous subgroups called strata, and the right number of instances is sampled from each stratum to guarantee that the test set is representative of the overall population.
+	._ 
+	._ 
+	._ 
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+1. S3:
+	._ Amazon S3 is storage for the internet. This service is designed to make web-scale computing easier for developers. Amazon S3 provides a simple web service interface that can be used to store and retrieve any amount of data, at any time, from anywhere on the web. The service gives any developer access to the same highly scalable, reliable, secure, fast, inexpensive infrastructure that Amazon uses to run its own global network of websites. The service aims to maximize benefits of scale and pass those benefits on to developers.
+	._ 
+	._ 
+	._ 
+
+2. Data Lakes:
+	._ promise the ability to store all data for a business in a single repository. 
+	._ benefits of Data Lake:
+		>- cost-effective data storage solution.
+		>- Implement industry-leading security and compliance.
+		>- Take advantage of many different data collection and ingestion tools to ingest data into your data lake.
+		>- categorize and manage your data simply and efficiently.Use AWS Glue to understand the data within your data lake, prepare it, and load it reliably into data stores. Once AWS Glue catalogs your data, it is immediately searchable, can be queried, and is available for ETL processing.
+
+		>- A data lake on AWS can help you do the following:
+			>- Collect and store any type of data, at any scale, and at low cost
+			>- Secure the data and prevent unauthorized access
+			>- Catalog, search, and find the relevant data in the central repository
+			>- Quickly and easily perform new types of data analysis
+			>- Use a broad set of analytic engines for one-time analytics, real-time streaming, predictive analytics, AI, and machine learning.
+		>- 
+		>- 
+		>- 
+
+	._ we’ve got is Amazon S3 that can host a data lake and Amazon Redshift that can host a data warehouse, but what if I need to query across both spaces: - Amazon Redshift Spectrum allows you to combine your data lake and data warehouse as if it were a single source of data. No data movement, no crazy query logic, just clean queries of all your data. So now, it’s possible to execute a single query against exabytes of data!
+
+	._ The biggest benefit of data warehousing, regardless of its location, is FAST, CENTRALIZED data retrieval.Data warehouses provide curated datasets that can be used for a variety of analysis and reporting needs.
+
+	._ Downside of Traditional DWH: 
+		>- their cost : Small businesses may not have the time or resources to purchase the hardware and software required, configure rules and constraints to keep the data consistent, and perform extract, transform, and load (ETL) operations.
+		>- ongoing maintenance and security concerns.
+		>- there’s scalability: traditional data warehousing usually can’t scale to meet the unpredictable demands of business workloads.
+		>- You would then run any required analysis against this relational data warehouse. These analysis processes are limited to the data within the data warehouse. In today’s data landscape, this is a huge limitation, considering the breadth of data available to businesses.
+
+	._ It is important to remember that a data lake AUGMENTS, but does not replace, a data warehouse. DataLakes(DL) and DWH are two different STORAGE Systems and DL doesn't replace DWH.
+	._ 
+	._ 
+	._ 

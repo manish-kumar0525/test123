@@ -1,0 +1,60 @@
+$ ls -ltr
+python3 -c "import nltk; nltk.download('book')"
+
+total 4
+-rw-r--r-- 1 scrapbook scrapbook 106 Mar 20 13:40 app.py
+$ more app.py
+import nltk
+from nltk.book import text6
+n=len(text6)
+print(n)
+u=len(set(text6))
+print(u)
+wc=n/u
+print(wc)
+
+ise_ending_words = [word for word in set(text6) if word.endswith('ise')]
+print(len(ise_ending_words))
+
+contains_z = [word for word in set(text6) if word.__contains__('z')]
+print(len(contains_z))
+
+contains_pt = [word for word in set(text6) if word.__contains__('pt')]
+print(len(contains_pt))
+
+title_words = [word for word in set(text6) if word[0].isupper() and word[1:].islower()]
+print(len(title_words))
+
+title_words = [word for word in text6 if word[0].isupper() and word[1:].islower()]
+print(len(title_words))
+
+Filter those words from the complete set of text6, having first letter in
+upper case and all other letters in lower case. Store the result in variable
+title_words. print the number of words present in title_words.
+
+:::::::::::::::::::::::::::::
+>>> from nltk.book import *
+>>> type(text1)
+n_words = len(text1)
+
+>>> text1_lcw = [ word.lower() for word in set(text1) ]
+>>> n_unique_words_lc = len(set(text1_lcw))
+>>> n_unique_words_lc
+
+>>> big_words = [word for word in set(text1) if len(word) > 17 ]
+>>> big_words
+
+>>> sun_words = [word for word in set(text1) if word.startswith('Sun') ]
+>>> sun_words
+
+>>> text1_freq = nltk.FreqDist(text1)
+>>> text1_freq['Sunday']
+
+>>> top3_text1 = text1_freq.most_common(3)
+>>> top3_text1
+
+>>> large_uncommon_words = [word for word in text1 if word.isalpha() and len(word) > 7 ]
+>>> text1_uncommon_freq = nltk.FreqDist(large_uncommon_words)
+>>> text1_uncommon_freq.most_common(3)
+
+text6_freq = nltk.FreqDist(text6)
